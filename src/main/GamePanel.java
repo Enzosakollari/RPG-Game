@@ -1,0 +1,242 @@
+package main;
+import Entity.Entity;
+import Entity.NPC_OldMan;
+import Entity.Player;
+import Objects.SuperObject;
+import Tile.TileManage;
+import javax.swing.*;
+import java.awt.*;
+
+public class GamePanel extends JPanel implements Runnable {
+    // Screen settings
+    final int originalTileSize = 16;
+    final int scale = 3;
+    public final int tileSize = originalTileSize * scale;
+    public final int maxScreenCol = 16;
+    public final int getMaxScreenRow = 12;
+    public final int screenWidth = tileSize * maxScreenCol;
+    public final int screenHeight = tileSize * getMaxScreenRow;
+
+    // World Map parameters
+    public final int maxWorldCol = 100;
+    public final int maxWorldRow = 100;
+    public final int worldWidth = tileSize * maxWorldCol;
+    public final int worldHeight = tileSize * maxWorldRow;
+
+    // FPS
+    int FPS = 60;
+    public TileManage tileM = new TileManage(this);
+    KeyHandler keyH = new KeyHandler(this);
+    // Sound
+    Sound sound = new Sound();
+    public CollisionChecker cChecker = new CollisionChecker(this);
+    public AssetSetter aSetter = new AssetSetter(this);
+    public UI ui = new UI(this);
+    public EventHandler eHandler = new EventHandler(this);
+    Thread gameThread;
+    public Player player = new Player(this, keyH);
+    public Entity npc[] = new Entity[10];
+    public SuperObject obj[] = new SuperObject[30];
+    public int gameState;
+    public final int titleState = 0;
+    public final int nameState = 1;
+    public final int classState = 2;
+    public final int playState = 3;
+    public final int pauseState = 4;
+    public final int dialogueState = 5;
+    public final int gameOverState = 6;
+
+    public GamePanel() {
+        this.setPreferredSize(new Dimension(screenWidth, screenHeight));
+        this.setBackground(Color.black);
+        this.setDoubleBuffered(true);
+        this.addKeyListener(keyH);
+        this.setFocusable(true);
+    }
+
+    public void setupGame() {
+        aSetter.setObject();
+        aSetter.setNpc();
+        playMusic(0);
+        gameState = titleState;
+    }
+
+    public void startGameThread() {
+        gameThread = new Thread(this);
+        gameThread.start();
+    }
+
+    public void update() {
+        if (gameState == playState) {
+            player.update();
+
+            // Check if player died during gameplay
+            if (player.currentLife <= 0 && !ui.gameOver) {
+                ui.triggerGameOver();
+                gameState = gameOverState;
+                return; // Stop further updates
+            }
+
+            for (int i = 0; i < npc.length; i++) {
+                if (npc[i] != null) {
+                    npc[i].update();
+                }
+            }
+        }
+        else if (gameState == pauseState) {
+            // Paused state logic - nothing updates
+        }
+        // Other states don't need updates
+    }
+
+    @Override
+    public void run() {
+        double drawInterval = 1000000000 / FPS;
+        double nextDrawTime = System.nanoTime() + drawInterval;
+
+        while (gameThread != null) {
+            update();
+            repaint();
+
+            try {
+                double remainingTime = nextDrawTime - System.nanoTime();
+                remainingTime = remainingTime / 1000000;
+
+                if (remainingTime < 0) {
+                    remainingTime = 0;
+                }
+                Thread.sleep((long) remainingTime);
+
+                nextDrawTime += drawInterval;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+
+        // Debug
+        long drawStart = 0;
+        if (keyH.checkDrawTime == true) {
+            drawStart = System.nanoTime();
+        }
+
+        // Title, Name, Class, and Game Over screens only draw UI
+        if (gameState == titleState || gameState == nameState ||
+                gameState == classState || gameState == gameOverState) {
+            ui.draw(g2);
+        }
+        // Play, Pause, and Dialogue states draw the full game world
+        else if (gameState == playState || gameState == pauseState || gameState == dialogueState) {
+            tileM.draw(g2);
+
+            // Objects
+            for (int i = 0; i < obj.length; i++) {
+                if (obj[i] != null) {
+                    obj[i].draw(g2, this);
+                }
+            }
+
+            // NPCs
+            for (int i = 0; i < npc.length; i++) {
+                if (npc[i] != null) {
+                    npc[i].draw(g2);
+                }
+            }
+
+            // Player (only draw if not dead)
+            if (player.currentLife > 0) {
+                player.draw(g2);
+            }
+
+            // UI
+            ui.draw(g2);
+
+            // If paused, draw pause screen over everything
+            if (gameState == pauseState) {
+                ui.drawPauseScreen();
+            }
+        }
+
+        // Debug
+        if (keyH.checkDrawTime == true) {
+            long drawEnd = System.nanoTime();
+            long passed = drawEnd - drawStart;
+            g2.setColor(Color.white);
+            g2.drawString("Draw Time: " + passed, 10, 400);
+            System.out.println("Draw Time" + passed);
+        }
+
+        g2.dispose();
+    }
+
+    public void playMusic(int i) {
+        sound.setFile(i);
+        sound.play();
+        sound.loop();
+    }
+
+    public void stopMusic() {
+        sound.stop();
+    }
+
+    public void playSE(int i) {
+        sound.setFile(i);
+        sound.play();
+    }
+    private boolean isPlayerBehindTree() {
+        int playerCol = player.worldx / tileSize;
+        int playerRow = player.worldy / tileSize;
+
+        // Adjust these numbers to match your tree tile numbers
+        // Check the tile numbers in your TileManager for trees
+        int[] treeTiles = {4}; // Example tree tile numbers
+
+        if (playerCol >= 0 && playerCol < maxWorldCol && playerRow >= 0 && playerRow < maxWorldRow) {
+            int tileNum = tileM.mapTileNum[playerCol][playerRow];
+            for (int treeTile : treeTiles) {
+                if (tileNum == treeTile) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public int getCameraX() {
+        int cameraX = player.worldx - player.screenX;
+        if (cameraX < 0) cameraX = 0;
+        if (cameraX > worldWidth - screenWidth) cameraX = worldWidth - screenWidth;
+        return cameraX;
+    }
+
+    public int getCameraY() {
+        int cameraY = player.worldy - player.screenY;
+        if (cameraY < 0) cameraY = 0;
+        if (cameraY > worldHeight - screenHeight) cameraY = worldHeight - screenHeight;
+        return cameraY;
+    }
+
+    // Add this method to restart the game
+    public void restartGame() {
+        // Reset player
+        player.setDefaultValues();
+        player.currentLife = player.maxLife;
+
+        // Reset NPCs and objects if needed
+        aSetter.setObject();
+        aSetter.setNpc();
+
+        // Reset game state
+        gameState = titleState;
+        ui.gameOver = false;
+        ui.commandNum = 0;
+
+        // Stop and restart music if needed
+        stopMusic();
+        playMusic(0);
+    }
+}

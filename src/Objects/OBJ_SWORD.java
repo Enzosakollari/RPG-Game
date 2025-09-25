@@ -1,20 +1,12 @@
 package Objects;
 
-import javax.imageio.ImageIO;
-import java.io.File;
+import Entity.Entity;
+import main.GamePanel;
 
-public class OBJ_SWORD extends SuperObject{
-
-
-
-    public OBJ_SWORD(){
-        name="sword";
-        try{
-            image= ImageIO.read(new File("C:\\Users\\User\\Desktop\\RPG-Game\\resources\\Tiles\\objects\\sword2.png"));
-
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
+public class OBJ_SWORD extends Entity {
+    public OBJ_SWORD(GamePanel gp) {
+        super(gp);
+        name = "Sword";
+        down1 = loadObjectImage("/Tiles/objects/sword2.png");
     }
 }

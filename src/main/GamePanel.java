@@ -2,10 +2,12 @@ package main;
 import Entity.Entity;
 import Entity.NPC_OldMan;
 import Entity.Player;
-import Objects.SuperObject;
 import Tile.TileManage;
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class GamePanel extends JPanel implements Runnable {
     // Screen settings
@@ -36,7 +38,8 @@ public class GamePanel extends JPanel implements Runnable {
     Thread gameThread;
     public Player player = new Player(this, keyH);
     public Entity npc[] = new Entity[10];
-    public SuperObject obj[] = new SuperObject[30];
+    public Entity obj[] = new Entity[30];
+    ArrayList<Entity> entityList=new ArrayList<>();
     public int gameState;
     public final int titleState = 0;
     public final int nameState = 1;
@@ -130,27 +133,37 @@ public class GamePanel extends JPanel implements Runnable {
             ui.draw(g2);
         }
         // Play, Pause, and Dialogue states draw the full game world
+// Play, Pause, and Dialogue states draw the full game world
         else if (gameState == playState || gameState == pauseState || gameState == dialogueState) {
             tileM.draw(g2);
 
-            // Objects
-            for (int i = 0; i < obj.length; i++) {
-                if (obj[i] != null) {
-                    obj[i].draw(g2, this);
-                }
-            }
-
-            // NPCs
-            for (int i = 0; i < npc.length; i++) {
-                if (npc[i] != null) {
-                    npc[i].draw(g2);
-                }
-            }
-
-            // Player (only draw if not dead)
+            // Build entity list for this frame
+            entityList.clear();
             if (player.currentLife > 0) {
-                player.draw(g2);
+                entityList.add(player);
             }
+            for (int i = 0; i < npc.length; i++) {
+                if (npc[i] != null) entityList.add(npc[i]);
+            }
+            for (int i = 0; i < obj.length; i++) {
+                if (obj[i] != null) entityList.add(obj[i]);
+            }
+
+            // Sort by worldY so things overlap correctly
+            Collections.sort(entityList, new Comparator<Entity>() {
+                @Override
+                public int compare(Entity e1, Entity e2) {
+                    return Integer.compare(e1.worldy, e2.worldy);
+                }
+            });
+
+            // Draw all entities once
+            for (Entity e : entityList) {
+                e.draw(g2);
+            }
+
+            // Clear list for next frame
+            entityList.clear();
 
             // UI
             ui.draw(g2);

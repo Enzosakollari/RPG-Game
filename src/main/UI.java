@@ -2,7 +2,6 @@ package main;
 
 import Objects.OBJ_KEY;
 import Objects.OBJ_LIFE;
-import Objects.SuperObject;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -51,7 +50,7 @@ public class UI {
             e.printStackTrace();
         }
 
-        OBJ_KEY key = new OBJ_KEY();
+        OBJ_KEY key = new OBJ_KEY(gp);
         keyImage = key.image;
 
         // Load the title background image
@@ -66,10 +65,10 @@ public class UI {
         }
 
         // Create HUD Object
-        SuperObject heart = new OBJ_LIFE(gp);
-        fullheart = heart.image;
-        halfheart = heart.image2;
-        emptyheart = heart.image3;
+//        SuperObject heart = new OBJ_LIFE(gp);
+//        fullheart = heart.image;
+//        halfheart = heart.image2;
+//        emptyheart = heart.image3;
     }
 
     public void showMessage(String text) {

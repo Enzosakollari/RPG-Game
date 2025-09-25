@@ -1,20 +1,15 @@
 package Objects;
 
+import Entity.Entity;
+import main.GamePanel;
+
 import javax.imageio.ImageIO;
 import java.io.File;
 
-public class OBJ_KEY extends SuperObject{
-
-
-
-    public OBJ_KEY(){
-        name="key";
-        try{
-            image= ImageIO.read(new File("C:\\Users\\User\\Desktop\\RPG-Game\\resources\\Tiles\\objects\\key.png"));
-
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
+public class OBJ_KEY extends Entity {
+    public OBJ_KEY(GamePanel gp){
+        super(gp);
+        name="Key";
+        down1=loadObjectImage("/Tiles/objects/key.png");
     }
 }

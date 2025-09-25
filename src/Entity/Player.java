@@ -26,6 +26,9 @@ public class Player extends Entity {
 
         // Set default direction first to prevent null issues
         direction = "down";
+
+        // Initialize player
+        setup();
     }
 
     public void setup() {
@@ -36,22 +39,25 @@ public class Player extends Entity {
 
         // Set default values
         setDefaultValues();
+
+        // Load sprites if class is already set
+        if (playerClass != null && !playerClass.isEmpty()) {
+            loadSprites();
+        }
     }
 
-    // ADD THIS METHOD
     public void setDefaultValues() {
         worldx = gp.tileSize * 4;
         worldy = gp.tileSize * 6;
         speed = 2;
-        direction = "down"; // Ensure direction is never null
+        direction = "down";
         maxLife = 6;
         currentLife = maxLife;
-        hasKey = 0; // Reset keys
-        // Reset any other player stats as needed
+        hasKey = 0;
     }
 
     private void loadSprites() {
-        String basePath = "C:\\Users\\User\\Desktop\\RPG-Game\\resources\\Sprites" +"\\"+ playerClass + "\\" + playerClass.toLowerCase();
+        String basePath = "C:\\Users\\User\\Desktop\\RPG-Game\\resources\\Sprites" + "\\" + playerClass + "\\" + playerClass.toLowerCase();
 
         System.out.println("Loading sprites from: " + basePath);
 
@@ -107,7 +113,7 @@ public class Player extends Entity {
     public void setPlayerClass(String playerClass) {
         if (playerClass != null && !playerClass.isEmpty()) {
             this.playerClass = playerClass;
-            loadSprites(); // Reload sprites when class changes
+            loadSprites();
         }
     }
 
@@ -133,16 +139,30 @@ public class Player extends Entity {
             direction = "down";
         }
 
+        // Reset collision
         collisionOn = false;
-        gp.cChecker.CheckTile(this);
-        int objIndex = gp.cChecker.checkObject(this, true);
-        pickUpObject(objIndex);
 
+        // Check collisions
+        gp.cChecker.CheckTile(this);
+
+        // Check object collision and get index
+        int objIndex = gp.cChecker.checkObject(this, true);
+
+        // Handle object interaction
+        if (objIndex != 999) {
+            pickUpObject(objIndex);
+        }
+
+        // Check NPC collision
         gp.cChecker.checkEntity(this, gp.npc);
 
+        // Handle interactions
         handleInteractionKey();
+
+        // Check events
         gp.eHandler.checkEvent();
 
+        // Move player if no collision and moving
         if (moving && !collisionOn) {
             switch (direction) {
                 case "up": worldy -= speed; break;
@@ -153,15 +173,19 @@ public class Player extends Entity {
         }
 
         // Clamp player within world bounds
-        if (worldx < 0) worldx = 0;
-        if (worldy < 0) worldy = 0;
-        if (worldx > gp.worldWidth - gp.tileSize) worldx = gp.worldWidth - gp.tileSize;
-        if (worldy > gp.worldHeight - gp.tileSize) worldy = gp.worldHeight - gp.tileSize;
+        worldx = Math.max(0, Math.min(worldx, gp.worldWidth - gp.tileSize));
+        worldy = Math.max(0, Math.min(worldy, gp.worldHeight - gp.tileSize));
 
+        // Update animation
         spriteCounter++;
         if (spriteCounter > 10) {
             spriteNum = (spriteNum == 1) ? 2 : 1;
             spriteCounter = 0;
+        }
+
+        // Reset interaction key if not pressed this frame
+        if (!keyH.interactPressed) {
+            keyH.interactPressed = false;
         }
     }
 
@@ -170,71 +194,84 @@ public class Player extends Entity {
             int npcIndex = gp.cChecker.checkEntity(this, gp.npc);
             if (npcIndex != 999) {
                 interactNPC(npcIndex);
-                keyH.interactPressed = false;
             }
+            keyH.interactPressed = false;
         }
     }
 
     public void pickUpObject(int i) {
-        if (i != 999) {
+        if (i != 999 && gp.obj[i] != null) {
             String objectName = gp.obj[i].name;
-            switch (objectName) {
-                case "key":
-                    gp.playSE(1);
-                    hasKey++;
-                    gp.obj[i] = null;
-                    gp.ui.showMessage("You got a key!");
-                    break;
-                case "door":
-                    if (hasKey > 0) {
-                        gp.playSE(3);
-                        gp.obj[i] = null;
-                        hasKey--;
-                        gp.ui.showMessage("You opened a door!");
-                    } else {
-                        gp.ui.showMessage("You need a key!");
-                    }
-                    break;
-                case "sword":
-                    gp.obj[i] = null;
-                    gp.playSE(2);
-                    break;
-                case "chest":
-                    gp.obj[i] = null;
-                    gp.ui.gameOver = true;
-                    gp.stopMusic();
-                    gp.playSE(4);
-                    break;
-                case "potion":
-                    gp.playSE(2);
-                    gp.obj[i] = null;
-                    speed += 2;
-                    gp.ui.showMessage("You got a speed potion!");
-                    break;
-                case "low-speed potion":
-                    gp.playSE(2);
-                    gp.obj[i] = null;
-                    speed -= 1;
-                    gp.ui.showMessage("You got a decrease in speed!");
-                    break;
-                case "healing potion":
-                    gp.playSE(2);
-                    gp.obj[i] = null;
-                    // Make sure we don't exceed max life
-                    gp.player.currentLife = Math.min(gp.player.currentLife + 2, gp.player.maxLife);
-                    gp.ui.showMessage("You got a health potion!");
-                    break;
-                case "sword2":
-                    gp.playSE(2);
-                    gp.obj[i] = null;
-                    gp.ui.showMessage("You got a legendary sword!");
-                    break;
+
+            // Debug output to see what object we're colliding with
+            System.out.println("Collided with object: " + objectName);
+
+            // Use equalsIgnoreCase for case-insensitive comparison or exact match
+            if ("Key".equals(objectName)) {
+                gp.playSE(1);
+                hasKey++;
+                gp.ui.showMessage("You got a key! Total keys: " + hasKey);
+                gp.obj[i] = null; // Remove the key from the game world
+                System.out.println("Key collected! Total keys: " + hasKey);
+
+            } else if ("Door".equals(objectName)) {
+                if (hasKey > 0) {
+                    gp.playSE(3);
+                    hasKey--;
+                    gp.ui.showMessage("You opened a door! Keys remaining: " + hasKey);
+                    gp.obj[i] = null; // Remove the door
+                    System.out.println("Door opened! Keys remaining: " + hasKey);
+                } else {
+                    gp.ui.showMessage("You need a key to open this door!");
+                    System.out.println("Need a key to open door!");
+                    // Don't remove the door - keep it there until player has a key
+                    collisionOn = true; // Block movement
+                }
+
+            } else if ("Sword".equals(objectName)) {
+                gp.obj[i] = null;
+                gp.playSE(2);
+                gp.ui.showMessage("You found a sword!");
+
+            } else if ("Chest".equals(objectName)) {
+                gp.obj[i] = null;
+                gp.ui.gameOver = true;
+                gp.stopMusic();
+                gp.playSE(4);
+                gp.ui.showMessage("You found the treasure! Game Over!");
+
+            } else if ("Potion".equals(objectName)) {
+                gp.playSE(2);
+                gp.obj[i] = null;
+                speed += 2;
+                gp.ui.showMessage("You got a speed potion! Speed: " + speed);
+
+            } else if ("Low-speed potion".equals(objectName)) {
+                gp.playSE(2);
+                gp.obj[i] = null;
+                speed = Math.max(1, speed - 1); // Don't go below 1 speed
+                gp.ui.showMessage("You got a decrease in speed! Speed: " + speed);
+
+            } else if ("Healing potion".equals(objectName)) {
+                gp.playSE(2);
+                gp.obj[i] = null;
+                currentLife = Math.min(currentLife + 2, maxLife);
+                gp.ui.showMessage("You got a health potion! Health: " + currentLife + "/" + maxLife);
+
+            } else if ("Sword2".equals(objectName)) {
+                gp.playSE(2);
+                gp.obj[i] = null;
+                gp.ui.showMessage("You got a legendary sword!");
+
+            } else {
+                // Default case for any unrecognized object
+                System.out.println("Unknown object: " + objectName);
             }
         }
     }
 
     public void interactNPC(int i) {
-        if (i != 999) {
+        if (i != 999 && gp.npc[i] != null) {
             gp.gameState = gp.dialogueState;
             gp.npc[i].speak();
         }
@@ -242,9 +279,16 @@ public class Player extends Entity {
 
     public void draw(Graphics2D g2) {
         BufferedImage image = getCurrentImage();
-        int screenX = worldx - gp.getCameraX();
-        int screenY = worldy - gp.getCameraY();
-        g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+        if (image != null) {
+            int screenX = worldx - gp.getCameraX();
+            int screenY = worldy - gp.getCameraY();
+
+            // Only draw if on screen
+            if (screenX + gp.tileSize > 0 && screenX < gp.screenWidth &&
+                    screenY + gp.tileSize > 0 && screenY < gp.screenHeight) {
+                g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+            }
+        }
     }
 
     private BufferedImage getCurrentImage() {
@@ -263,6 +307,14 @@ public class Player extends Entity {
                 return spriteNum == 1 ? right1 : right2;
             default:
                 return down1;
+        }
+    }
+
+    // Helper method to reset player state
+    public void reset() {
+        setDefaultValues();
+        if (playerClass != null && !playerClass.isEmpty()) {
+            loadSprites();
         }
     }
 }

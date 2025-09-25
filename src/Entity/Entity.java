@@ -11,63 +11,50 @@ import java.io.IOException;
 
 public class Entity {
     GamePanel gp;
-    public int worldx,worldy;
+    public int worldx, worldy;
     public int speed;
-    public BufferedImage up1,up2,right1,right2,left1,left2,down1,down2;
-    public String direction;
+    public BufferedImage up1, up2, right1, right2, left1, left2, down1, down2;
+    public String direction = "down";
 
-    public int spriteCounter=0;
-    public int spriteNum=1;
+    public int spriteCounter = 0;
+    public int spriteNum = 1;
 
-    public Rectangle solidArea=new Rectangle(0,0,48,48);
-    public int solidAreaDefaultX;
-    public int solidAreaDefaultY;
-    public boolean collisionOn;
-    public int actionLockCounter=0;
-    String dialogues[]=new String[20];
-    public int dialogueIndex=0;
-    //character status
+    public Rectangle solidArea = new Rectangle(0, 0, 48, 48);
+    public int solidAreaDefaultX = 0;
+    public int solidAreaDefaultY = 0;
+    public boolean collisionOn = false;
+    public int actionLockCounter = 0;
+    String dialogues[] = new String[20];
+    public int dialogueIndex = 0;
+
+    // Character status
     public int maxLife;
     public int currentLife;
-
-
-
-    private int clamp(int value, int min, int max) {
-        return Math.max(min, Math.min(value, max));
-    }
+    public BufferedImage image, image2, image3;
+    public String name;
+    public boolean collision = false;
 
     public Entity(GamePanel gp){
-        this.gp=gp;
+        this.gp = gp;
     }
 
+    public void setAction(){}
 
-    public void setAction(){
-
-    }
     public void speak(){
-
         if(dialogueIndex < dialogues.length && dialogues[dialogueIndex] != null) {
             gp.ui.currentDialogue = dialogues[dialogueIndex];
             dialogueIndex++;
 
             switch (gp.player.direction) {
-                case "up":
-                    direction = "down";
-                    break;
-                case "down":
-                    direction = "up";
-                    break;
-                case "left":
-                    direction = "right";
-                    break;
-                case "right":
-                    direction = "left";
-                    break;
+                case "up": direction = "down"; break;
+                case "down": direction = "up"; break;
+                case "left": direction = "right"; break;
+                case "right": direction = "left"; break;
             }
 
             new Thread(() -> {
                 try {
-                    Thread.sleep(200000); // Wait 2 seconds
+                    Thread.sleep(2000); // Fixed: 2 seconds instead of 200000
                     if(gp.gameState == gp.dialogueState) {
                         gp.gameState = gp.playState;
                         gp.ui.currentDialogue = "";
@@ -82,36 +69,25 @@ public class Entity {
             gp.gameState = gp.playState;
         }
     }
+
     public void update(){
         setAction();
-        collisionOn=false;
+        collisionOn = false;
         gp.cChecker.CheckTile(this);
-        
-        // Check collision with player
         gp.cChecker.checkPlayer(this);
 
-        if (collisionOn==false) {
+        if (!collisionOn) {
             switch (direction) {
-                case "up":
-                    worldy -= speed;
-                    break;
-                case "down":
-                    worldy += speed;
-                    break;
-                case "left":
-                    worldx -= speed;
-                    break;
-                case "right":
-                    worldx += speed;
-                    break;
+                case "up": worldy -= speed; break;
+                case "down": worldy += speed; break;
+                case "left": worldx -= speed; break;
+                case "right": worldx += speed; break;
             }
         }
 
-        // Clamp player within world bounds
-        if (worldx < 0) worldx = 0;
-        if (worldy < 0) worldy = 0;
-        if (worldx > gp.worldWidth - gp.tileSize) worldx = gp.worldWidth - gp.tileSize;
-        if (worldy > gp.worldHeight - gp.tileSize) worldy = gp.worldHeight - gp.tileSize;
+        // Clamp within world bounds
+        worldx = Math.max(0, Math.min(worldx, gp.worldWidth - gp.tileSize));
+        worldy = Math.max(0, Math.min(worldy, gp.worldHeight - gp.tileSize));
 
         spriteCounter++;
         if (spriteCounter > 10) {
@@ -131,25 +107,25 @@ public class Entity {
                 for (String num : numbers) {
                     String imageName = "boy_" + dir + "_" + num;
                     String fullPath = basePath + imageName + ".png";
-                    
+
                     File imageFile = new File(fullPath);
                     if (!imageFile.exists()) {
                         System.err.println("Image file not found: " + fullPath);
                         continue;
                     }
-                    
+
                     BufferedImage originalImage = ImageIO.read(imageFile);
                     if (originalImage != null) {
                         BufferedImage scaledImage = uTool.scaleImage(originalImage, gp.tileSize, gp.tileSize);
                         switch (dir + num) {
-                            case "down1" -> down1 = scaledImage;
-                            case "down2" -> down2 = scaledImage;
-                            case "up1" -> up1 = scaledImage;
-                            case "up2" -> up2 = scaledImage;
-                            case "left1" -> left1 = scaledImage;
-                            case "left2" -> left2 = scaledImage;
-                            case "right1" -> right1 = scaledImage;
-                            case "right2" -> right2 = scaledImage;
+                            case "down1": down1 = scaledImage; break;
+                            case "down2": down2 = scaledImage; break;
+                            case "up1": up1 = scaledImage; break;
+                            case "up2": up2 = scaledImage; break;
+                            case "left1": left1 = scaledImage; break;
+                            case "left2": left2 = scaledImage; break;
+                            case "right1": right1 = scaledImage; break;
+                            case "right2": right2 = scaledImage; break;
                         }
                     }
                 }
@@ -160,27 +136,50 @@ public class Entity {
         }
     }
 
+    public BufferedImage loadObjectImage(String imagePath) {
+        UtilityTool uTool = new UtilityTool();
+        try {
+            var inputStream = getClass().getResourceAsStream(imagePath);
+            if (inputStream == null) {
+                System.err.println("Image file not found in resources: " + imagePath);
+                return null;
+            }
+
+            BufferedImage originalImage = ImageIO.read(inputStream);
+            if (originalImage != null) {
+                return uTool.scaleImage(originalImage, gp.tileSize, gp.tileSize);
+            }
+        } catch (IOException e) {
+            System.err.println("Error loading image: " + imagePath);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public void draw(Graphics2D g2) {
         BufferedImage image = null;
-        
+
         switch (direction) {
-            case "up" -> image = spriteNum == 1 ? up1 : up2;
-            case "down" -> image = spriteNum == 1 ? down1 : down2;
-            case "left" -> image = spriteNum == 1 ? left1 : left2;
-            case "right" -> image = spriteNum == 1 ? right1 : right2;
+            case "up": image = (spriteNum == 1) ? up1 : up2; break;
+            case "down": image = (spriteNum == 1) ? down1 : down2; break;
+            case "left": image = (spriteNum == 1) ? left1 : left2; break;
+            case "right": image = (spriteNum == 1) ? right1 : right2; break;
         }
 
         if (image != null) {
             int screenX = worldx - gp.getCameraX();
             int screenY = worldy - gp.getCameraY();
 
-
-            if (screenX + gp.tileSize > 0 &&
-                screenX - gp.tileSize < gp.screenWidth &&
-                screenY + gp.tileSize > 0 &&
-                screenY - gp.tileSize < gp.screenHeight) {
+            if (isOnScreen(screenX, screenY)) {
                 g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
             }
         }
+    }
+
+    private boolean isOnScreen(int screenX, int screenY) {
+        return screenX + gp.tileSize > 0 &&
+                screenX - gp.tileSize < gp.screenWidth &&
+                screenY + gp.tileSize > 0 &&
+                screenY - gp.tileSize < gp.screenHeight;
     }
 }

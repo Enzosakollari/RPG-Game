@@ -1,19 +1,17 @@
 package Objects;
 
+import Entity.Entity;
+import main.GamePanel;
+
 import javax.imageio.ImageIO;
 import java.io.File;
 
-public class OBJ_SPEEDPOTION extends SuperObject{
-    public OBJ_SPEEDPOTION(){
-        name="potion";
-        try{
-            image= ImageIO.read(new File("C:\\Users\\User\\Desktop\\RPG-Game\\resources\\Tiles\\objects\\potion1.png"));
+public class OBJ_SPEEDPOTION extends Entity {
+    public OBJ_SPEEDPOTION(GamePanel gp){
+        super(gp);
+        name="Potion";
+        down1=loadObjectImage("/Tiles/objects/potion1.png");
 
-        }catch(Exception e){
-
-            e.printStackTrace();
-        }
-        collision=true;
     }
 
 

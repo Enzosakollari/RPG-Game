@@ -22,7 +22,6 @@ public class TileManage {
         this.mapTileNum = loadMap("C:\\Users\\User\\Desktop\\RPG-Game\\resources\\map\\newmap.txt");
     }
 
-    // Load all tile images and return them in a Tile[] array
     public void loadTileImages() {
         setup(0, "general/grass", false);
         setup(1, "general/wall2", true);
@@ -67,20 +66,20 @@ public class TileManage {
         setup(36, "castle/36", true);
 
         ///water
-        setup(37,"water/water00",true);
-        setup(38,"water/water01",true);
-        setup(39,"water/water02",true);
-        setup(40,"water/water03",true);
-        setup(41,"water/water04",true);
-        setup(42,"water/water05",true);
-        setup(43,"water/water06",true);
-        setup(44,"water/water07",true);
-        setup(45,"water/water08",true);
-        setup(46,"water/water09",true);
-        setup(47,"water/water10",true);
-        setup(48,"water/water11",true);
-        setup(49,"water/water12",true);
-        setup(50,"water/water13",true);
+        setup(37, "water/water00", true);
+        setup(38, "water/water01", true);
+        setup(39, "water/water02", true);
+        setup(40, "water/water03", true);
+        setup(41, "water/water04", true);
+        setup(42, "water/water05", true);
+        setup(43, "water/water06", true);
+        setup(44, "water/water07", true);
+        setup(45, "water/water08", true);
+        setup(46, "water/water09", true);
+        setup(47, "water/water10", true);
+        setup(48, "water/water11", true);
+        setup(49, "water/water12", true);
+        setup(50, "water/water13", true);
 
         //dungeon
         setup(51, "dungeon/51", true);
@@ -97,15 +96,15 @@ public class TileManage {
         setup(62, "dungeon/62", true);
         setup(63, "dungeon/63", true);
         setup(64, "dungeon/64", true);
-        setup(65,"dungeon/65", true);
-        setup(66,"dungeon/66", true);
-        setup(67,"dungeon/67", false);
-        setup(68,"dungeon/68", false);
-        setup(69,"dungeon/69", false);
-        setup(70,"dungeon/70", false);
-        setup(71,"dungeon/71", false);
-        setup(72,"dungeon/72", false);
-        setup(73,"dungeon/73", false);
+        setup(65, "dungeon/65", true);
+        setup(66, "dungeon/66", true);
+        setup(67, "dungeon/67", false);
+        setup(68, "dungeon/68", false);
+        setup(69, "dungeon/69", false);
+        setup(70, "dungeon/70", false);
+        setup(71, "dungeon/71", false);
+        setup(72, "dungeon/72", false);
+        setup(73, "dungeon/73", false);
 
 
     }
@@ -142,7 +141,6 @@ public class TileManage {
     }
 
 
-    // Helper method to create a tile from a file path
     private Tile createTile(String filePath) throws IOException {
         System.out.println("Loading tile: " + filePath); // Debug output
         Tile t = new Tile();
@@ -154,7 +152,7 @@ public class TileManage {
         return t;
 
     }
-    // Load the map into a 2D int array
+
     public int[][] loadMap(String mapPath) {
 
         int[][] map = new int[gp.maxWorldCol][gp.maxWorldRow];
@@ -169,7 +167,7 @@ public class TileManage {
                 // Skip empty lines
 
                 if (line.trim().isEmpty()) continue;
-                
+
                 String[] numbers = line.trim().split("\\s+");
 
                 for (int col = 0; col < gp.maxWorldCol && col < numbers.length; col++) {
@@ -215,7 +213,6 @@ public class TileManage {
             int screenX = worldX - cameraX;
             int screenY = worldY - cameraY;
 
-            // Only draw tiles that are within the player's screen view
             if (screenX + gp.tileSize > 0 &&
                     screenX - gp.tileSize < gp.screenWidth &&
                     screenY + gp.tileSize > 0 &&

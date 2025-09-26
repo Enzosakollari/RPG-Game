@@ -11,14 +11,12 @@ public class KeyDataDAO {
     public static void saveKeyCount(int keyCount) {
         String playerId = Main.CURRENT_PLAYER_ID;
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Check if record exists
             String select = "SELECT id FROM key_data WHERE id = ?";
             PreparedStatement selectStmt = conn.prepareStatement(select);
             selectStmt.setString(1, playerId);
             ResultSet rs = selectStmt.executeQuery();
 
             if(rs.next()) {
-                // Update
                 String update = "UPDATE key_data SET key_count = ? WHERE id = ?";
                 PreparedStatement updateStmt = conn.prepareStatement(update);
                 updateStmt.setInt(1, keyCount);
@@ -50,6 +48,6 @@ public class KeyDataDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0; // Default if not found
+        return 0;
     }
 }

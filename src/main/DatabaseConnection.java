@@ -9,12 +9,10 @@ import java.sql.Statement;
 
 public class DatabaseConnection {
 
-    // MySQL connection parameters - UPDATE THESE FOR YOUR SETUP
     private static final String URL = "jdbc:mysql://localhost:3306/Game";
-    private static final String USER = "root"; // Your MySQL username
-    private static final String PASSWORD = "1234"; // Your MySQL password
+    private static final String USER = "root";
+    private static final String PASSWORD = "1234";
 
-    // Load MySQL driver
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -25,7 +23,6 @@ public class DatabaseConnection {
         }
     }
 
-    // Initialize database and create table if it doesn't exist
     private static void initializeDatabase() {
         String createTableSQL = "CREATE TABLE IF NOT EXISTS players (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -61,7 +58,6 @@ public class DatabaseConnection {
         }
     }
 
-    // Method to save player data
     public static int savePlayer(String name, String playerClass) {
         // Validate parameters
         if (name == null || name.trim().isEmpty() || playerClass == null || playerClass.trim().isEmpty()) {
@@ -89,10 +85,9 @@ public class DatabaseConnection {
             System.err.println("Error saving player to database: " + e.getMessage());
             e.printStackTrace();
         }
-        return -1; // Return -1 if failed
+        return -1;
     }
 
-    // Optional: Method to retrieve player data
     public static PlayerData getPlayer(int playerId) {
         String sql = "SELECT * FROM players WHERE id = ?";
 

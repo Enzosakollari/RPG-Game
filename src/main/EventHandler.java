@@ -49,7 +49,7 @@ public class EventHandler {
         checkTeleport(98, 87, 92, 79);
         checkTeleport(91, 80, 97, 87);
 
-        checkTeleport(10, 12, 40,10 );
+        checkTeleport(10, 12, 40, 10);
         checkTeleport(41, 10, 11, 12);
 
         checkTeleport(70, 80, 80, 90);

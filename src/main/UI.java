@@ -144,30 +144,24 @@ public class UI {
     }
 
     public void drawGameOverScreen() {
-        // Draw game over image to fit the entire screen (no black background)
         if (gameOverImage != null) {
-            // Scale image to fit the entire screen
             g2.drawImage(gameOverImage, 0, 0, gp.screenWidth, gp.screenHeight, null);
 
-            // Draw text directly on top of the image with outline for readability
             g2.setFont(dragonSlayer.deriveFont(Font.BOLD, 36F));
 
             String question = "Start a new game?";
             int textX = getXforCenteredText(question);
             int textY = gp.screenHeight - 100;
 
-            // Draw text outline for better visibility
             g2.setColor(Color.BLACK);
             g2.drawString(question, textX - 1, textY - 1);
             g2.drawString(question, textX + 1, textY - 1);
             g2.drawString(question, textX - 1, textY + 1);
             g2.drawString(question, textX + 1, textY + 1);
 
-            // Draw main text
             g2.setColor(Color.WHITE);
             g2.drawString(question, textX, textY);
 
-            // Draw options
             g2.setFont(dragonSlayer.deriveFont(Font.PLAIN, 32F));
 
             String[] options = {"New Game", "Quit"};
@@ -176,7 +170,6 @@ public class UI {
                 int optionX = getXforCenteredText(option);
                 int optionY = gp.screenHeight - 50 + (i * 35);
 
-                // Draw outline for options too
                 g2.setColor(Color.BLACK);
                 if (i == commandNum) {
                     String selectedOption = "> " + option + " <";
@@ -238,35 +231,27 @@ public class UI {
     public void drawDialogueScreen() {
         if (currentDialogue == null || currentDialogue.isEmpty()) return;
 
-        // Calculate text dimensions with larger font (28)
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 28F));
         FontMetrics fm = g2.getFontMetrics();
 
-        // Calculate maximum width for the scroll in tiles, then convert to pixels
         int maxScrollWidthPixels = SCROLL_MAX_WIDTH_TILES * gp.tileSize;
 
-        // Get wrapped lines with padding (convert tile padding to pixels)
         int textAreaWidth = maxScrollWidthPixels - (TEXT_PADDING_TILES * gp.tileSize * 4);
         List<String> lines = getWrappedLines(currentDialogue, textAreaWidth);
 
-        // Calculate required height based on text
         int lineHeight = fm.getHeight() + 4;
         int textHeight = lines.size() * lineHeight;
 
-        // Calculate scroll height in tiles, then convert to pixels
         int minScrollHeightPixels = SCROLL_MIN_HEIGHT_TILES * gp.tileSize;
         int contentHeight = textHeight + (TEXT_PADDING_TILES * gp.tileSize * 4);
         int scrollHeightPixels = Math.max(contentHeight, minScrollHeightPixels);
 
-        // Position the scroll at the TOP center of the screen
         int scrollWidthPixels = maxScrollWidthPixels;
         int x = (gp.screenWidth - scrollWidthPixels) / 2;
         int y = - gp.tileSize/4; // Position at top of screen
 
-        // Draw the scroll
         drawScrollWindow(x, y, scrollWidthPixels, scrollHeightPixels);
 
-        // Draw the text (position based on tile padding)
         g2.setColor(new Color(60, 40, 20));
         int textY = y + (TEXT_PADDING_TILES * gp.tileSize * 2) + fm.getAscent();
         for (String line : lines) {
@@ -275,7 +260,6 @@ public class UI {
             textY += lineHeight;
         }
 
-        // Draw "Press Enter to continue" at the bottom if needed
         if (lines.size() > 3) {
             String continueText = "Press Enter to continue...";
             g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 16F));
@@ -287,12 +271,10 @@ public class UI {
     }
 
     public void drawPlayerLife() {
-        // Position life indicator at BOTTOM LEFT corner
         int x = gp.tileSize / 2;
         int y = gp.screenHeight - (gp.tileSize * 2); // Position near bottom
         int i = 0;
 
-        // Empty heart
         while (i < gp.player.maxLife / 2) {
             g2.drawImage(emptyheart, x, y, null);
             i++;
@@ -302,7 +284,6 @@ public class UI {
         x = gp.tileSize / 2;
         i = 0;
 
-        // Draw current life
         while (i < gp.player.currentLife) {
             g2.drawImage(halfheart, x, y, null);
             i++;
@@ -315,7 +296,6 @@ public class UI {
     }
 
     public void drawTitleScreen() {
-        // Draw the background image scaled to fit the screen
         if (titleBackgroundImage != null) {
             g2.drawImage(titleBackgroundImage, 0, 0, gp.screenWidth, gp.screenHeight, null);
         } else {
@@ -328,14 +308,12 @@ public class UI {
                 g2.drawLine(0, i, gp.screenWidth, i);
             }
 
-            // Add retro scanlines effect
             g2.setColor(new Color(0, 0, 0, 30));
             for (int i = 0; i < gp.screenHeight; i += 3) {
                 g2.drawLine(0, i, gp.screenWidth, i);
             }
         }
 
-        // Title text
         g2.setFont(dragonSlayer);
         g2.setColor(new Color(212, 175, 55));
         String text = "";
@@ -343,7 +321,6 @@ public class UI {
         int y = gp.tileSize * 3;
         g2.drawString(text, x, y);
 
-        // Menu options
         g2.setFont(dragonSlayer);
         y = gp.screenHeight / 2 + gp.tileSize * 2;
 
@@ -370,7 +347,6 @@ public class UI {
             g2.drawString(">", x - gp.tileSize, y);
         }
 
-        // Footer instructions
         g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 18F));
         g2.setColor(new Color(150, 150, 150));
         String footer = "Press ENTER to select";
@@ -380,11 +356,9 @@ public class UI {
     }
 
     public void drawNameEntryScreen() {
-        // Draw the same background as title screen
         if (titleBackgroundImage != null) {
             g2.drawImage(titleBackgroundImage, 0, 0, gp.screenWidth, gp.screenHeight, null);
         } else {
-            // Fallback background (same as title screen)
             for (int i = 0; i < gp.screenHeight; i++) {
                 float ratio = (float) i / gp.screenHeight;
                 int blue = (int) (10 + ratio * 40);
@@ -393,14 +367,12 @@ public class UI {
                 g2.drawLine(0, i, gp.screenWidth, i);
             }
 
-            // Add retro scanlines effect
             g2.setColor(new Color(0, 0, 0, 30));
             for (int i = 0; i < gp.screenHeight; i += 3) {
                 g2.drawLine(0, i, gp.screenWidth, i);
             }
         }
 
-        // Use smaller font size for "Enter Your Name"
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
         g2.setColor(new Color(212, 175, 55));
 
@@ -409,7 +381,6 @@ public class UI {
         int y = gp.screenHeight / 2 + gp.tileSize;
         g2.drawString(text, x, y);
 
-        // Show current name being typed
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
         x = getXforCenteredText(playerName + ">");
         y += gp.tileSize * 1.5;
@@ -425,11 +396,9 @@ public class UI {
     }
 
     public void drawClassSelectionScreen() {
-        // Draw the same background as title screen
         if (titleBackgroundImage != null) {
             g2.drawImage(titleBackgroundImage, 0, 0, gp.screenWidth, gp.screenHeight, null);
         } else {
-            // Fallback background (same as title screen)
             for (int i = 0; i < gp.screenHeight; i++) {
                 float ratio = (float) i / gp.screenHeight;
                 int blue = (int) (10 + ratio * 40);
@@ -438,14 +407,11 @@ public class UI {
                 g2.drawLine(0, i, gp.screenWidth, i);
             }
 
-            // Add retro scanlines effect
             g2.setColor(new Color(0, 0, 0, 30));
             for (int i = 0; i < gp.screenHeight; i += 3) {
                 g2.drawLine(0, i, gp.screenWidth, i);
             }
         }
-
-        // Use smaller font size for "Choose Your Class"
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 32F));
         g2.setColor(new Color(212, 175, 55));
 
@@ -454,7 +420,6 @@ public class UI {
         int y = gp.screenHeight / 2 + gp.tileSize;
         g2.drawString(text, x, y);
 
-        // List classes - smaller font and closer spacing
         g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 28F));
         for (int i = 0; i < classes.length; i++) {
             text = classes[i];
@@ -467,7 +432,6 @@ public class UI {
             }
         }
 
-        // Add instructions - keep at bottom of screen
         g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 18F));
         g2.setColor(new Color(150, 150, 150));
         String instructions = "Use W/S to select, ENTER to confirm";
@@ -499,12 +463,10 @@ public class UI {
         return x;
     }
 
-    // Helper method to wrap text
     private List<String> getWrappedLines(String text, int maxWidth) {
         List<String> lines = new ArrayList<>();
         FontMetrics fm = g2.getFontMetrics();
 
-        // If text is empty, return empty list
         if (text == null || text.isEmpty()) {
             return lines;
         }
@@ -512,11 +474,9 @@ public class UI {
         for (String paragraph : text.split("\n")) {
             StringBuilder line = new StringBuilder();
             for (String word : paragraph.split(" ")) {
-                // Test if adding this word would exceed the width
                 String testLine = line.length() == 0 ? word : line + " " + word;
                 if (fm.stringWidth(testLine) > maxWidth) {
                     if (line.length() == 0) {
-                        // Word is too long to fit, split it
                         for (char c : word.toCharArray()) {
                             String testChar = line.toString() + c;
                             if (fm.stringWidth(testChar) > maxWidth) {
@@ -527,7 +487,6 @@ public class UI {
                             }
                         }
                     } else {
-                        // Add the current line and start a new one
                         lines.add(line.toString());
                         line = new StringBuilder(word);
                     }

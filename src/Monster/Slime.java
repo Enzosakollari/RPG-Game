@@ -2,6 +2,7 @@ package Monster;
 
 import Entity.Entity;
 import main.GamePanel;
+
 import java.awt.Rectangle;
 
 public class Slime extends Entity {
@@ -18,7 +19,6 @@ public class Slime extends Entity {
         this.chaseDistance = 6 * 48; // 6 tiles
         this.collision = true;
 
-        // Load slime sprites using your existing setupSimple method
         setupSimple("C:\\Users\\User\\Desktop\\RPG-Game\\resources\\monster\\", "redslime");
 
         solidArea = new Rectangle(8, 16, 32, 32);
@@ -28,15 +28,13 @@ public class Slime extends Entity {
 
     @Override
     public void setAction() {
-        // If player is in range, chase them!
         if (isPlayerInRange()) {
             chasePlayer();
         } else {
-            moveRandomly(); // Wander randomly if player is too far
+            moveRandomly();
         }
     }
 
-    // Monster-specific methods
     public boolean isPlayerInRange() {
         int playerX = gp.player.worldx;
         int playerY = gp.player.worldy;
@@ -68,7 +66,6 @@ public class Slime extends Entity {
         int xDiff = playerX - worldx;
         int yDiff = playerY - worldy;
 
-        // Prioritize the larger distance difference
         if (Math.abs(xDiff) > Math.abs(yDiff)) {
             if (xDiff > 0) {
                 direction = "right";
@@ -89,13 +86,21 @@ public class Slime extends Entity {
     public void moveRandomly() {
         actionLockCounter++;
 
-        if (actionLockCounter == 120) { // Change direction every 2 seconds
-            int directionIndex = (int)(Math.random() * 4);
+        if (actionLockCounter == 120) {
+            int directionIndex = (int) (Math.random() * 4);
             switch (directionIndex) {
-                case 0: direction = "up"; break;
-                case 1: direction = "down"; break;
-                case 2: direction = "left"; break;
-                case 3: direction = "right"; break;
+                case 0:
+                    direction = "up";
+                    break;
+                case 1:
+                    direction = "down";
+                    break;
+                case 2:
+                    direction = "left";
+                    break;
+                case 3:
+                    direction = "right";
+                    break;
             }
             actionLockCounter = 0;
         }
@@ -112,7 +117,7 @@ public class Slime extends Entity {
 
             // Play attack sound if available
 //            if (gp.sound != null) {
-//                gp.playSE(6); // Monster attack sound
+//                gp.playSE(6);
 //            }
             System.out.println(name + " attacked! Player health: " + gp.player.currentLife);
         }

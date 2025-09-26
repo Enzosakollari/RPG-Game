@@ -20,7 +20,6 @@ public class KeyHandler implements KeyListener {
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
 
-        // TITLE STATE
         if (gp.gameState == gp.titleState) {
             if (code == KeyEvent.VK_W) {
                 gp.ui.commandNum--;
@@ -36,7 +35,6 @@ public class KeyHandler implements KeyListener {
                     gp.ui.playerName = ""; // Reset name
                 }
                 if (gp.ui.commandNum == 1) {
-                    // Options menu later
                 }
                 if (gp.ui.commandNum == 2) {
                     System.exit(0);
@@ -57,8 +55,7 @@ public class KeyHandler implements KeyListener {
             }
         }
 
-        // CLASS SELECTION STATE
-        // CLASS SELECTION STATE
+
         else if (gp.gameState == gp.classState) {
             if (code == KeyEvent.VK_W) {
                 gp.ui.classCommandNum--;
@@ -69,23 +66,19 @@ public class KeyHandler implements KeyListener {
                 if (gp.ui.classCommandNum >= gp.ui.classes.length) gp.ui.classCommandNum = 0;
             }
             if (code == KeyEvent.VK_ENTER) {
-                gp.player.playerName = gp.ui.playerName;  // save name to player
+                gp.player.playerName = gp.ui.playerName;
                 String chosenClass = gp.ui.classes[gp.ui.classCommandNum];
 
-                // Set class → loads correct sprites
                 gp.player.setPlayerClass(chosenClass);
 
-                // Finish setting up stats, hearts, position, etc.
                 gp.player.setup();
 
-                // Optional: save player data
                 Main.savePlayerData(gp.player.playerName, chosenClass);
 
-                gp.gameState = gp.playState; // start the game
+                gp.gameState = gp.playState;
             }
         }
 
-        // PLAY STATE
         else if (gp.gameState == gp.playState) {
             if (code == KeyEvent.VK_W) upPressed = true;
             if (code == KeyEvent.VK_A) leftPressed = true;
@@ -95,12 +88,10 @@ public class KeyHandler implements KeyListener {
             if (code == KeyEvent.VK_ENTER) interactPressed = true;
         }
 
-        // PAUSE STATE
         else if (gp.gameState == gp.pauseState) {
             if (code == KeyEvent.VK_P) gp.gameState = gp.playState;
         }
 
-        // DIALOGUE STATE
         else if (gp.gameState == gp.dialogueState) {
             if (code == KeyEvent.VK_ENTER) {
                 gp.gameState = gp.playState;
@@ -122,10 +113,8 @@ public class KeyHandler implements KeyListener {
             }
             if (code == KeyEvent.VK_ENTER) {
                 if (gp.ui.commandNum == 0) {
-                    // New Game - restart the game
                     gp.restartGame();
                 } else if (gp.ui.commandNum == 1) {
-                    // Quit
                     System.exit(0);
                 }
             }

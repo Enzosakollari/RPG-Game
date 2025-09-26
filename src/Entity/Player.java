@@ -24,10 +24,7 @@ public class Player extends Entity {
         screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
 
-        // Set default direction first to prevent null issues
         direction = "down";
-
-        // Initialize player
         setup();
     }
 
@@ -37,10 +34,8 @@ public class Player extends Entity {
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
 
-        // Set default values
         setDefaultValues();
 
-        // Load sprites if class is already set
         if (playerClass != null && !playerClass.isEmpty()) {
             loadSprites();
         }
@@ -70,7 +65,6 @@ public class Player extends Entity {
         right1 = loadAndScaleImage(basePath + "-right-1.png");
         right2 = loadAndScaleImage(basePath + "-right-2.png");
 
-        // If any sprites failed to load, throw an exception
         if (up1 == null || down1 == null || left1 == null || right1 == null) {
             throw new RuntimeException("Failed to load player sprites for class: " + playerClass +
                     ". Check if files exist in: " + basePath);
@@ -134,46 +128,40 @@ public class Player extends Entity {
             moving = true;
         }
 
-        // Ensure direction is never null
         if (direction == null) {
             direction = "down";
         }
 
-        // Reset collision
         collisionOn = false;
 
-        // Check collisions
         gp.cChecker.CheckTile(this);
 
-        // Check object collision and get index
         int objIndex = gp.cChecker.checkObject(this, true);
 
-        // Handle object interaction
         if (objIndex != 999) {
             pickUpObject(objIndex);
         }
 
-        // Check NPC collision - but don't auto-trigger dialogue
         int npcIndex = gp.cChecker.checkEntity(this, gp.npc);
-        // Don't auto-interact here - wait for key press
-
-        // Check monster collision
         int monsterIndex = gp.cChecker.checkEntity(this, gp.monsters);
         contactMonster(monsterIndex);
-
-        // Handle interactions only when key is pressed
         handleInteractionKey();
-
-        // Check events
         gp.eHandler.checkEvent();
 
-        // Move player if no collision and moving
         if (moving && !collisionOn) {
             switch (direction) {
-                case "up": worldy -= speed; break;
-                case "down": worldy += speed; break;
-                case "left": worldx -= speed; break;
-                case "right": worldx += speed; break;
+                case "up":
+                    worldy -= speed;
+                    break;
+                case "down":
+                    worldy += speed;
+                    break;
+                case "left":
+                    worldx -= speed;
+                    break;
+                case "right":
+                    worldx += speed;
+                    break;
             }
         }
 
@@ -193,9 +181,9 @@ public class Player extends Entity {
             keyH.interactPressed = false;
         }
 
-        if (invisible == true){
+        if (invisible == true) {
             invisibleCounter++;
-            if (invisibleCounter > 60){
+            if (invisibleCounter > 60) {
                 invisible = false;
                 invisibleCounter = 0;
             }
@@ -216,15 +204,13 @@ public class Player extends Entity {
         if (i != 999 && gp.obj[i] != null) {
             String objectName = gp.obj[i].name;
 
-            // Debug output to see what object we're colliding with
             System.out.println("Collided with object: " + objectName);
 
-            // Use equalsIgnoreCase for case-insensitive comparison or exact match
             if ("Key".equals(objectName)) {
                 gp.playSE(1);
                 hasKey++;
                 gp.ui.showMessage("You got a key! Total keys: " + hasKey);
-                gp.obj[i] = null; // Remove the key from the game world
+                gp.obj[i] = null;
                 System.out.println("Key collected! Total keys: " + hasKey);
 
             } else if ("Door".equals(objectName)) {
@@ -232,13 +218,12 @@ public class Player extends Entity {
                     gp.playSE(3);
                     hasKey--;
                     gp.ui.showMessage("You opened a door! Keys remaining: " + hasKey);
-                    gp.obj[i] = null; // Remove the door
+                    gp.obj[i] = null;
                     System.out.println("Door opened! Keys remaining: " + hasKey);
                 } else {
                     gp.ui.showMessage("You need a key to open this door!");
                     System.out.println("Need a key to open door!");
-                    // Don't remove the door - keep it there until player has a key
-                    collisionOn = true; // Block movement
+                    collisionOn = true;
                 }
 
             } else if ("Sword".equals(objectName)) {
@@ -262,7 +247,7 @@ public class Player extends Entity {
             } else if ("Low-speed potion".equals(objectName)) {
                 gp.playSE(2);
                 gp.obj[i] = null;
-                speed = Math.max(1, speed - 1); // Don't go below 1 speed
+                speed = Math.max(1, speed - 1);
                 gp.ui.showMessage("You got a decrease in speed! Speed: " + speed);
 
             } else if ("Healing potion".equals(objectName)) {
@@ -277,7 +262,6 @@ public class Player extends Entity {
                 gp.ui.showMessage("You got a legendary sword!");
 
             } else {
-                // Default case for any unrecognized object
                 System.out.println("Unknown object: " + objectName);
             }
         }
@@ -289,11 +273,12 @@ public class Player extends Entity {
             gp.npc[i].speak();
         }
     }
-    public void contactMonster(int i){
-        if (i!=999){
-            if (invisible==false){
-            currentLife-=1;
-            invisible=true;
+
+    public void contactMonster(int i) {
+        if (i != 999) {
+            if (invisible == false) {
+                currentLife -= 1;
+                invisible = true;
             }
         }
     }
@@ -304,22 +289,17 @@ public class Player extends Entity {
             int screenX = worldx - gp.getCameraX();
             int screenY = worldy - gp.getCameraY();
 
-            // Only draw if on screen
             if (screenX + gp.tileSize > 0 && screenX < gp.screenWidth &&
                     screenY + gp.tileSize > 0 && screenY < gp.screenHeight) {
 
-                // Apply transparency when invisible
                 if (invisible) {
-                    // Set transparency (alpha composite) to 50%
                     AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
                     g2.setComposite(alphaComposite);
 
                     g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
 
-                    // Reset transparency to normal
                     g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
                 } else {
-                    // Draw normally without transparency
                     g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
                 }
             }
@@ -345,7 +325,6 @@ public class Player extends Entity {
         }
     }
 
-    // Helper method to reset player state
     public void reset() {
         setDefaultValues();
         if (playerClass != null && !playerClass.isEmpty()) {

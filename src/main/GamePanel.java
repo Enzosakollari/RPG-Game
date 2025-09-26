@@ -1,8 +1,10 @@
 package main;
+
 import Entity.Entity;
 import Entity.NPC_OldMan;
 import Entity.Player;
 import Tile.TileManage;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -10,7 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class GamePanel extends JPanel implements Runnable {
-    // Screen settings
+
     final int originalTileSize = 16;
     final int scale = 3;
     public final int tileSize = originalTileSize * scale;
@@ -29,7 +31,6 @@ public class GamePanel extends JPanel implements Runnable {
     int FPS = 60;
     public TileManage tileM = new TileManage(this);
     KeyHandler keyH = new KeyHandler(this);
-    // Sound
     Sound sound = new Sound();
     public CollisionChecker cChecker = new CollisionChecker(this);
     public AssetSetter aSetter = new AssetSetter(this);
@@ -39,8 +40,8 @@ public class GamePanel extends JPanel implements Runnable {
     public Player player = new Player(this, keyH);
     public Entity npc[] = new Entity[10];
     public Entity obj[] = new Entity[30];
-    public Entity monsters[]=new Entity[30];
-    ArrayList<Entity> entityList=new ArrayList<>();
+    public Entity monsters[] = new Entity[30];
+    ArrayList<Entity> entityList = new ArrayList<>();
     public int gameState;
     public final int titleState = 0;
     public final int nameState = 1;
@@ -75,11 +76,10 @@ public class GamePanel extends JPanel implements Runnable {
         if (gameState == playState) {
             player.update();
 
-            // Check if player died during gameplay
             if (player.currentLife <= 0 && !ui.gameOver) {
                 ui.triggerGameOver();
                 gameState = gameOverState;
-                return; // Stop further updates
+                return;
             }
 
             for (int i = 0; i < npc.length; i++) {
@@ -87,16 +87,14 @@ public class GamePanel extends JPanel implements Runnable {
                     npc[i].update();
                 }
             }
-            for (int i = 0;i<monsters.length;i++){
-                if (monsters[i]!=null){
+            for (int i = 0; i < monsters.length; i++) {
+                if (monsters[i] != null) {
                     monsters[i].update();
                 }
             }
+        } else if (gameState == pauseState) {
+
         }
-        else if (gameState == pauseState) {
-            // Paused state logic - nothing updates
-        }
-        // Other states don't need updates
     }
 
     @Override
@@ -138,10 +136,7 @@ public class GamePanel extends JPanel implements Runnable {
         if (gameState == titleState || gameState == nameState ||
                 gameState == classState || gameState == gameOverState) {
             ui.draw(g2);
-        }
-        // Play, Pause, and Dialogue states draw the full game world
-// Play, Pause, and Dialogue states draw the full game world
-        else if (gameState == playState || gameState == pauseState || gameState == dialogueState) {
+        } else if (gameState == playState || gameState == pauseState || gameState == dialogueState) {
             tileM.draw(g2);
 
             // Build entity list for this frame
@@ -155,11 +150,10 @@ public class GamePanel extends JPanel implements Runnable {
             for (int i = 0; i < obj.length; i++) {
                 if (obj[i] != null) entityList.add(obj[i]);
             }
-            for (int i=0;i<monsters.length;i++){
-                if (monsters[i]!=null) entityList.add(monsters[i]);
+            for (int i = 0; i < monsters.length; i++) {
+                if (monsters[i] != null) entityList.add(monsters[i]);
             }
 
-            // Sort by worldY so things overlap correctly
             Collections.sort(entityList, new Comparator<Entity>() {
                 @Override
                 public int compare(Entity e1, Entity e2) {
@@ -167,24 +161,19 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             });
 
-            // Draw all entities once
             for (Entity e : entityList) {
                 e.draw(g2);
             }
 
-            // Clear list for next frame
             entityList.clear();
 
-            // UI
             ui.draw(g2);
 
-            // If paused, draw pause screen over everything
             if (gameState == pauseState) {
                 ui.drawPauseScreen();
             }
         }
 
-        // Debug
         if (keyH.checkDrawTime == true) {
             long drawEnd = System.nanoTime();
             long passed = drawEnd - drawStart;
@@ -210,13 +199,13 @@ public class GamePanel extends JPanel implements Runnable {
         sound.setFile(i);
         sound.play();
     }
+
     private boolean isPlayerBehindTree() {
         int playerCol = player.worldx / tileSize;
         int playerRow = player.worldy / tileSize;
 
-        // Adjust these numbers to match your tree tile numbers
-        // Check the tile numbers in your TileManager for trees
-        int[] treeTiles = {4}; // Example tree tile numbers
+
+        int[] treeTiles = {4};
 
         if (playerCol >= 0 && playerCol < maxWorldCol && playerRow >= 0 && playerRow < maxWorldRow) {
             int tileNum = tileM.mapTileNum[playerCol][playerRow];
@@ -249,7 +238,6 @@ public class GamePanel extends JPanel implements Runnable {
         player.setDefaultValues();
         player.currentLife = player.maxLife;
 
-        // Reset NPCs and objects if needed
         aSetter.setObject();
         aSetter.setNpc();
 
@@ -258,7 +246,6 @@ public class GamePanel extends JPanel implements Runnable {
         ui.gameOver = false;
         ui.commandNum = 0;
 
-        // Stop and restart music if needed
         stopMusic();
         playMusic(0);
     }

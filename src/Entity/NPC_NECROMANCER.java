@@ -14,7 +14,7 @@ public class NPC_NECROMANCER extends  Entity{
         super(gp);
         direction="down";
         speed=1;
-        // Set solidArea for collision
+
         solidArea = new java.awt.Rectangle(8, 16, 32, 32);
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;

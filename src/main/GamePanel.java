@@ -39,6 +39,7 @@ public class GamePanel extends JPanel implements Runnable {
     public Player player = new Player(this, keyH);
     public Entity npc[] = new Entity[10];
     public Entity obj[] = new Entity[30];
+    public Entity monsters[]=new Entity[30];
     ArrayList<Entity> entityList=new ArrayList<>();
     public int gameState;
     public final int titleState = 0;
@@ -60,6 +61,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void setupGame() {
         aSetter.setObject();
         aSetter.setNpc();
+        aSetter.setMonster();
         playMusic(0);
         gameState = titleState;
     }
@@ -83,6 +85,11 @@ public class GamePanel extends JPanel implements Runnable {
             for (int i = 0; i < npc.length; i++) {
                 if (npc[i] != null) {
                     npc[i].update();
+                }
+            }
+            for (int i = 0;i<monsters.length;i++){
+                if (monsters[i]!=null){
+                    monsters[i].update();
                 }
             }
         }
@@ -147,6 +154,9 @@ public class GamePanel extends JPanel implements Runnable {
             }
             for (int i = 0; i < obj.length; i++) {
                 if (obj[i] != null) entityList.add(obj[i]);
+            }
+            for (int i=0;i<monsters.length;i++){
+                if (monsters[i]!=null) entityList.add(monsters[i]);
             }
 
             // Sort by worldY so things overlap correctly

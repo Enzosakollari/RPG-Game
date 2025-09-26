@@ -1,5 +1,6 @@
 package main;
 
+import Entity.Entity;
 import Objects.OBJ_KEY;
 import Objects.OBJ_LIFE;
 
@@ -69,6 +70,11 @@ public class UI {
 //        fullheart = heart.image;
 //        halfheart = heart.image2;
 //        emptyheart = heart.image3;
+         Entity heart=new OBJ_LIFE(gp);
+        fullheart=heart.image;
+        halfheart = heart.image2;
+        emptyheart = heart.image3;
+
     }
 
     public void showMessage(String text) {

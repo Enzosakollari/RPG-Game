@@ -3,6 +3,8 @@ package main;
 import Entity.NPC_GHOST;
 import Entity.NPC_NECROMANCER;
 import Entity.NPC_OldMan;
+
+import Monster.Slime;
 import Objects.*;
 
 public class AssetSetter {
@@ -125,5 +127,10 @@ public class AssetSetter {
         gp.npc[2]=new NPC_NECROMANCER(gp);
         gp.npc[2].worldx=33* gp.tileSize;
         gp.npc[2].worldy=79*gp.tileSize;
+    }
+    public void setMonster(){
+        gp.monsters[0]=new Slime(gp);
+        gp.monsters[0].worldx=13* gp.tileSize;
+        gp.monsters[0].worldy=77*gp.tileSize;
     }
 }

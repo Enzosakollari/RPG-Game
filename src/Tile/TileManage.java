@@ -25,7 +25,7 @@ public class TileManage {
     // Load all tile images and return them in a Tile[] array
     public void loadTileImages() {
         setup(0, "general/grass", false);
-        setup(1, "general/wall", true);
+        setup(1, "general/wall2", true);
         setup(2, "general/water", true);
         setup(3, "general/ground", false);
         setup(4, "general/tree2", false);

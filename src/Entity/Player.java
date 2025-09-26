@@ -153,10 +153,15 @@ public class Player extends Entity {
             pickUpObject(objIndex);
         }
 
-        // Check NPC collision
-        gp.cChecker.checkEntity(this, gp.npc);
+        // Check NPC collision - but don't auto-trigger dialogue
+        int npcIndex = gp.cChecker.checkEntity(this, gp.npc);
+        // Don't auto-interact here - wait for key press
 
-        // Handle interactions
+        // Check monster collision
+        int monsterIndex = gp.cChecker.checkEntity(this, gp.monsters);
+        contactMonster(monsterIndex);
+
+        // Handle interactions only when key is pressed
         handleInteractionKey();
 
         // Check events
@@ -186,6 +191,14 @@ public class Player extends Entity {
         // Reset interaction key if not pressed this frame
         if (!keyH.interactPressed) {
             keyH.interactPressed = false;
+        }
+
+        if (invisible == true){
+            invisibleCounter++;
+            if (invisibleCounter > 60){
+                invisible = false;
+                invisibleCounter = 0;
+            }
         }
     }
 
@@ -276,6 +289,14 @@ public class Player extends Entity {
             gp.npc[i].speak();
         }
     }
+    public void contactMonster(int i){
+        if (i!=999){
+            if (invisible==false){
+            currentLife-=1;
+            invisible=true;
+            }
+        }
+    }
 
     public void draw(Graphics2D g2) {
         BufferedImage image = getCurrentImage();
@@ -286,7 +307,21 @@ public class Player extends Entity {
             // Only draw if on screen
             if (screenX + gp.tileSize > 0 && screenX < gp.screenWidth &&
                     screenY + gp.tileSize > 0 && screenY < gp.screenHeight) {
-                g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+
+                // Apply transparency when invisible
+                if (invisible) {
+                    // Set transparency (alpha composite) to 50%
+                    AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
+                    g2.setComposite(alphaComposite);
+
+                    g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+
+                    // Reset transparency to normal
+                    g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+                } else {
+                    // Draw normally without transparency
+                    g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+                }
             }
         }
     }
@@ -317,4 +352,5 @@ public class Player extends Entity {
             loadSprites();
         }
     }
+
 }

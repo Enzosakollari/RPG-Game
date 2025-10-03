@@ -16,6 +16,7 @@ public class Sound {
             soundUrl[2]=getClass().getResource("/sound/Powerup.wav");
             soundUrl[3]=getClass().getResource("/sound/unlock.wav");
             soundUrl[4]=getClass().getResource("/sound/fanfare.wav");
+            soundUrl[5]=getClass().getResource("/sound/knifesharpener1.wav");
         } catch (Exception e) {
             e.printStackTrace();
         }

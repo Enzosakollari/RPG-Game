@@ -41,7 +41,9 @@ public class Entity {
     public int chaseDistance = 5 * 48;
     public int attackRange = 48;
     public boolean isChasing = false;
-
+    public boolean attacking=false;
+    public BufferedImage attackDown1,attackDown2,attackUp1,attackUp2,attackRight1
+            ,attackRight2,attackLeft1,attackLeft2;
     public Entity(GamePanel gp) {
         this.gp = gp;
     }
@@ -233,4 +235,5 @@ public class Entity {
                 screenY + gp.tileSize > 0 &&
                 screenY - gp.tileSize < gp.screenHeight;
     }
+
 }

@@ -5,6 +5,7 @@ import Entity.NPC_NECROMANCER;
 import Entity.NPC_OldMan;
 
 import Monster.Slime;
+import Monster.Snake;
 import Objects.*;
 
 public class AssetSetter {
@@ -133,8 +134,8 @@ public class AssetSetter {
 
     public void setMonster() {
         gp.monsters[0] = new Slime(gp);
-        gp.monsters[0].worldx = 13 * gp.tileSize;
-        gp.monsters[0].worldy = 77 * gp.tileSize;
+        gp.monsters[0].worldx = 50 * gp.tileSize;
+        gp.monsters[0].worldy = 68 * gp.tileSize;
 
         gp.monsters[1] = new Slime(gp);
         gp.monsters[1].worldx = 20 * gp.tileSize;
@@ -147,5 +148,9 @@ public class AssetSetter {
         gp.monsters[3] = new Slime(gp);
         gp.monsters[3].worldx = 80 * gp.tileSize;
         gp.monsters[3].worldy = 86 * gp.tileSize;
+
+        gp.monsters[4]=new Snake(gp);
+        gp.monsters[4].worldx = 50 * gp.tileSize;
+        gp.monsters[4].worldy = 50 * gp.tileSize;
     }
 }

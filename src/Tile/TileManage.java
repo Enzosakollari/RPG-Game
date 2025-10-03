@@ -25,9 +25,9 @@ public class TileManage {
     public void loadTileImages() {
         setup(0, "general/grass", false);
         setup(1, "general/wall2", true);
-        setup(2, "general/water", true);
+        setup(2, "general/boulder", true);
         setup(3, "general/ground", false);
-        setup(4, "general/tree2", false);
+        setup(4, "general/tree010", false);
         setup(5, "general/road", false);
 
 
@@ -105,6 +105,14 @@ public class TileManage {
         setup(71, "dungeon/71", false);
         setup(72, "dungeon/72", false);
         setup(73, "dungeon/73", false);
+        setup(74,"general/well",true);
+        setup(75,"dungeon/crystal1",true);
+        setup(76,"dungeon/crystal2",true);
+        setup(77,"dungeon/crystal3",true);
+        setup(78,"dungeon/crystal4",true);
+        setup(79,"general/barrel",true);
+        setup(80,"dungeon/grave",false);
+
 
 
     }

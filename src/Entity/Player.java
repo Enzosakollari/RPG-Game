@@ -16,6 +16,7 @@ public class Player extends Entity {
     public int hasKey = 0;
     public String playerName = "";
     public String playerClass = "";
+    public int attackCounter = 0;
 
     public Player(GamePanel gp, KeyHandler keyH) {
         super(gp);
@@ -42,9 +43,9 @@ public class Player extends Entity {
     }
 
     public void setDefaultValues() {
-        worldx = gp.tileSize * 4;
-        worldy = gp.tileSize * 6;
-        speed = 2;
+        worldx = gp.tileSize * 70;
+        worldy = gp.tileSize * 50;
+        speed = 9;
         direction = "down";
         maxLife = 6;
         currentLife = maxLife;
@@ -56,6 +57,7 @@ public class Player extends Entity {
 
         System.out.println("Loading sprites from: " + basePath);
 
+        // Regular movement sprites (16x16) - scale normally
         up1 = loadAndScaleImage(basePath + "-up-1.png");
         up2 = loadAndScaleImage(basePath + "-up-2.png");
         down1 = loadAndScaleImage(basePath + "-down-1.png");
@@ -65,10 +67,100 @@ public class Player extends Entity {
         right1 = loadAndScaleImage(basePath + "-right-1.png");
         right2 = loadAndScaleImage(basePath + "-right-2.png");
 
+        // Attacking sprites - handle different dimensions
+        attackUp1 = loadAttackSprite(basePath + "-attack-up-1.png", "up");
+        attackUp2 = loadAttackSprite(basePath + "-attack-up-2.png", "up");
+        attackDown1 = loadAttackSprite(basePath + "-attack-down-1.png", "down");
+        attackDown2 = loadAttackSprite(basePath + "-attack-down-2.png", "down");
+        attackLeft1 = loadAttackSprite(basePath + "-attack-left-1.png", "left");
+        attackLeft2 = loadAttackSprite(basePath + "-attack-left-2.png", "left");
+        attackRight1 = loadAttackSprite(basePath + "-attack-right-1.png", "right");
+        attackRight2 = loadAttackSprite(basePath + "-attack-right-2.png", "right");
+
+        // If attack sprites don't exist, use regular sprites as fallback
+        if (attackUp1 == null) attackUp1 = up1;
+        if (attackDown1 == null) attackDown1 = down1;
+        if (attackLeft1 == null) attackLeft1 = left1;
+        if (attackRight1 == null) attackRight1 = right1;
+
         if (up1 == null || down1 == null || left1 == null || right1 == null) {
-            throw new RuntimeException("Failed to load player sprites for class: " + playerClass +
-                    ". Check if files exist in: " + basePath);
+            throw new RuntimeException("Failed to load player sprites for class: " + playerClass);
         }
+    }
+
+    private BufferedImage loadAttackSprite(String path, String direction) {
+        try {
+            System.out.println("Trying to load attack sprite: " + path);
+            File file = new File(path);
+
+            if (!file.exists()) {
+                System.err.println("Attack sprite does not exist: " + file.getAbsolutePath());
+                return null;
+            }
+
+            BufferedImage originalImage = ImageIO.read(file);
+            if (originalImage != null) {
+                System.out.println("Successfully loaded attack sprite: " + path + " (" +
+                        originalImage.getWidth() + "x" + originalImage.getHeight() + ")");
+
+                // Scale attack sprites while maintaining proportions
+                return scaleAttackImage(originalImage, direction);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load attack sprite: " + path + " - " + e.getMessage());
+        }
+        return null;
+    }
+
+    private BufferedImage scaleAttackImage(BufferedImage original, String direction) {
+        int originalWidth = original.getWidth();
+        int originalHeight = original.getHeight();
+
+        int targetWidth, targetHeight;
+
+        // Determine scaling based on direction and original dimensions
+        switch (direction) {
+            case "up":
+            case "down":
+                // For vertical attacks (16x32 or similar)
+                if (originalWidth <= originalHeight) {
+                    // Tall sprite (like thrust up/down)
+                    targetHeight = gp.tileSize * 2; // Make it taller
+                    targetWidth = (originalWidth * targetHeight) / originalHeight;
+                } else {
+                    // Wide sprite
+                    targetWidth = gp.tileSize;
+                    targetHeight = (originalHeight * targetWidth) / originalWidth;
+                }
+                break;
+            case "left":
+            case "right":
+                // For horizontal attacks (32x16 or similar)
+                if (originalWidth >= originalHeight) {
+                    // Wide sprite (like swing left/right)
+                    targetWidth = gp.tileSize * 2; // Make it wider
+                    targetHeight = (originalHeight * targetWidth) / originalWidth;
+                } else {
+                    // Tall sprite
+                    targetHeight = gp.tileSize;
+                    targetWidth = (originalWidth * targetHeight) / originalHeight;
+                }
+                break;
+            default:
+                targetWidth = gp.tileSize;
+                targetHeight = gp.tileSize;
+        }
+
+        // Ensure minimum size
+        targetWidth = Math.max(targetWidth, gp.tileSize);
+        targetHeight = Math.max(targetHeight, gp.tileSize);
+
+        BufferedImage scaledImage = new BufferedImage(targetWidth, targetHeight, original.getType());
+        Graphics2D g2 = scaledImage.createGraphics();
+        g2.drawImage(original, 0, 0, targetWidth, targetHeight, null);
+        g2.dispose();
+
+        return scaledImage;
     }
 
     private BufferedImage loadAndScaleImage(String path) {
@@ -104,6 +196,14 @@ public class Player extends Entity {
         return scaledImage;
     }
 
+    public void attack() {
+        if (!attacking) {
+            attacking = true;
+            attackCounter = 0;
+            gp.playSE(5);
+        }
+    }
+
     public void setPlayerClass(String playerClass) {
         if (playerClass != null && !playerClass.isEmpty()) {
             this.playerClass = playerClass;
@@ -114,6 +214,9 @@ public class Player extends Entity {
     public void update() {
         boolean moving = false;
 
+        // -----------------------
+        // Movement input
+        // -----------------------
         if (keyH.upPressed) {
             direction = "up";
             moving = true;
@@ -132,12 +235,13 @@ public class Player extends Entity {
             direction = "down";
         }
 
+        // -----------------------
+        // Collision checks
+        // -----------------------
         collisionOn = false;
-
         gp.cChecker.CheckTile(this);
 
         int objIndex = gp.cChecker.checkObject(this, true);
-
         if (objIndex != 999) {
             pickUpObject(objIndex);
         }
@@ -145,9 +249,29 @@ public class Player extends Entity {
         int npcIndex = gp.cChecker.checkEntity(this, gp.npc);
         int monsterIndex = gp.cChecker.checkEntity(this, gp.monsters);
         contactMonster(monsterIndex);
-        handleInteractionKey();
+
         gp.eHandler.checkEvent();
 
+        // -----------------------
+        // Handle Interactions / Attack
+        // -----------------------
+        if (gp.keyH.interactPressed) {
+            if (npcIndex != 999) {
+                // Talk to NPC
+                gp.gameState = gp.dialogueState;
+                gp.npc[npcIndex].speak();
+            } else {
+                // Attack if no NPC
+                attacking = true;
+                attackCounter = 0;
+                gp.playSE(5); // optional sound
+            }
+            gp.keyH.interactPressed = false; // reset so it doesn't repeat instantly
+        }
+
+        // -----------------------
+        // Movement execution
+        // -----------------------
         if (moving && !collisionOn) {
             switch (direction) {
                 case "up":
@@ -165,38 +289,58 @@ public class Player extends Entity {
             }
         }
 
-        // Clamp player within world bounds
+        // Clamp inside world
         worldx = Math.max(0, Math.min(worldx, gp.worldWidth - gp.tileSize));
         worldy = Math.max(0, Math.min(worldy, gp.worldHeight - gp.tileSize));
 
-        // Update animation
+        // -----------------------
+        // Animation update
+        // -----------------------
         spriteCounter++;
         if (spriteCounter > 10) {
             spriteNum = (spriteNum == 1) ? 2 : 1;
             spriteCounter = 0;
         }
 
-        // Reset interaction key if not pressed this frame
-        if (!keyH.interactPressed) {
-            keyH.interactPressed = false;
-        }
-
-        if (invisible == true) {
+        // -----------------------
+        // Invisible timer
+        // -----------------------
+        if (invisible) {
             invisibleCounter++;
             if (invisibleCounter > 60) {
                 invisible = false;
                 invisibleCounter = 0;
             }
         }
+
+        // -----------------------
+        // Attack animation timing
+        // -----------------------
+        if (attacking) {
+            attackCounter++;
+            if (attackCounter > 20) {
+                attacking = false;
+                attackCounter = 0;
+            }
+        }
     }
 
     public void handleInteractionKey() {
-        if (keyH.interactPressed) {
+        if (gp.keyH.interactPressed) {
             int npcIndex = gp.cChecker.checkEntity(this, gp.npc);
+
             if (npcIndex != 999) {
-                interactNPC(npcIndex);
+                // ✅ Interact with NPC
+                gp.gameState = gp.dialogueState;
+                gp.npc[npcIndex].speak();
+            } else {
+                // ✅ No NPC → Attack
+                attacking = true;
+                attackCounter = 0;
+                gp.playSE(5); // optional sound effect
             }
-            keyH.interactPressed = false;
+
+            gp.keyH.interactPressed = false; // reset key
         }
     }
 
@@ -289,47 +433,74 @@ public class Player extends Entity {
             int screenX = worldx - gp.getCameraX();
             int screenY = worldy - gp.getCameraY();
 
-            if (screenX + gp.tileSize > 0 && screenX < gp.screenWidth &&
-                    screenY + gp.tileSize > 0 && screenY < gp.screenHeight) {
+            int drawWidth = image.getWidth();
+            int drawHeight = image.getHeight();
+
+            // Adjust position for larger attack sprites to keep them centered
+            if (attacking) {
+                switch (direction) {
+                    case "up":
+                        screenY -= (drawHeight - gp.tileSize); // Move up for upward attack
+                        break;
+                    case "left":
+                        screenX -= (drawWidth - gp.tileSize); // Move left for left attack
+                        break;
+                    // For down and right, we keep the same position since attack extends downward/rightward
+                }
+            }
+
+            if (screenX + drawWidth > 0 && screenX < gp.screenWidth &&
+                    screenY + drawHeight > 0 && screenY < gp.screenHeight) {
 
                 if (invisible) {
                     AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
                     g2.setComposite(alphaComposite);
 
-                    g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+                    g2.drawImage(image, screenX, screenY, drawWidth, drawHeight, null);
 
                     g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
                 } else {
-                    g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+                    g2.drawImage(image, screenX, screenY, drawWidth, drawHeight, null);
                 }
             }
         }
     }
 
     private BufferedImage getCurrentImage() {
-        if (direction == null) {
-            return down1;
+        BufferedImage image = null;
+
+        if (attacking) {
+            switch (direction) {
+                case "up":
+                    image = (spriteNum == 1) ? attackUp1 : attackUp2;
+                    break;
+                case "down":
+                    image = (spriteNum == 1) ? attackDown1 : attackDown2;
+                    break;
+                case "left":
+                    image = (spriteNum == 1) ? attackLeft1 : attackLeft2;
+                    break;
+                case "right":
+                    image = (spriteNum == 1) ? attackRight1 : attackRight2;
+                    break;
+            }
+        } else {
+            switch (direction) {
+                case "up":
+                    image = (spriteNum == 1) ? up1 : up2;
+                    break;
+                case "down":
+                    image = (spriteNum == 1) ? down1 : down2;
+                    break;
+                case "left":
+                    image = (spriteNum == 1) ? left1 : left2;
+                    break;
+                case "right":
+                    image = (spriteNum == 1) ? right1 : right2;
+                    break;
+            }
         }
 
-        switch (direction) {
-            case "up":
-                return spriteNum == 1 ? up1 : up2;
-            case "down":
-                return spriteNum == 1 ? down1 : down2;
-            case "left":
-                return spriteNum == 1 ? left1 : left2;
-            case "right":
-                return spriteNum == 1 ? right1 : right2;
-            default:
-                return down1;
-        }
+        return image;
     }
-
-    public void reset() {
-        setDefaultValues();
-        if (playerClass != null && !playerClass.isEmpty()) {
-            loadSprites();
-        }
-    }
-
 }

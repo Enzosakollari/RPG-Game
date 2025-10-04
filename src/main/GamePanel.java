@@ -3,6 +3,7 @@ package main;
 import Entity.Entity;
 import Entity.NPC_OldMan;
 import Entity.Player;
+import Objects.OBJ_DOOR;
 import Tile.TileManage;
 
 import javax.swing.*;
@@ -10,6 +11,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -50,6 +52,12 @@ public class GamePanel extends JPanel implements Runnable {
     public final int pauseState = 4;
     public final int dialogueState = 5;
     public final int gameOverState = 6;
+    public final int loadState = 7;
+    public int saveCounter = 0; // Add this for auto-save timing
+// Add to your game state constants
+
+    // Add this method to load game state
+
 
     public GamePanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
@@ -72,6 +80,57 @@ public class GamePanel extends JPanel implements Runnable {
         gameThread.start();
     }
 
+    public void saveGameState() {
+        if (Main.CURRENT_PLAYER_ID == null) return;
+
+        // Save player state (position, health, etc.)
+        player.saveToDatabase();
+
+        // Save ONLY permanent items that are still in the world
+        for (Entity entity : obj) {
+            if (entity != null) {
+                // Only save permanent items (not potions)
+                if (isPermanentItem(entity.name)) {
+                    DatabaseConnection.saveItem(Main.CURRENT_PLAYER_ID, entity.name, "object",
+                            entity.worldx, entity.worldy, false);
+                }
+            }
+        }
+
+        // Save door states
+        for (Entity entity : obj) {
+            if (entity != null && entity instanceof OBJ_DOOR) {
+                DatabaseConnection.saveDoor(Main.CURRENT_PLAYER_ID, entity.name,
+                        entity.worldx, entity.worldy, false);
+            }
+        }
+
+        System.out.println("Game state saved for player: " + Main.CURRENT_PLAYER_NAME);
+    }
+
+    // Helper method to determine if an item is permanent
+    private boolean isPermanentItem(String itemName) {
+        // Permanent items that should be saved
+        String[] permanentItems = {"Key", "Sword", "Sword2", "Chest", "Door"};
+
+        for (String permanentItem : permanentItems) {
+            if (permanentItem.equals(itemName)) {
+                return true;
+            }
+        }
+
+        // Potions and other consumables are NOT permanent
+        return false;
+    }
+    public void loadGameState() {
+        if (Main.CURRENT_PLAYER_ID == null) return;
+
+        // Load player data including position, health, and items
+        player.loadFromDatabase();
+
+        gameState = playState;
+        System.out.println("Game state loaded for: " + Main.CURRENT_PLAYER_NAME);
+    }
     public void update() {
         if (gameState == playState) {
             player.update();
@@ -132,11 +191,16 @@ public class GamePanel extends JPanel implements Runnable {
             drawStart = System.nanoTime();
         }
 
-        // Title, Name, Class, and Game Over screens only draw UI
+        // DEBUG: Print game state
+        System.out.println("DEBUG GamePanel paint: gameState = " + gameState);
+
+        // Title, Name, Class, Load Game, and Game Over screens only draw UI
         if (gameState == titleState || gameState == nameState ||
-                gameState == classState || gameState == gameOverState) {
+                gameState == classState || gameState == gameOverState || gameState == loadState) {
+            System.out.println("DEBUG: Drawing UI only for state: " + gameState);
             ui.draw(g2);
         } else if (gameState == playState || gameState == pauseState || gameState == dialogueState) {
+            System.out.println("DEBUG: Drawing game world for state: " + gameState);
             tileM.draw(g2);
 
             // Build entity list for this frame
@@ -172,6 +236,8 @@ public class GamePanel extends JPanel implements Runnable {
             if (gameState == pauseState) {
                 ui.drawPauseScreen();
             }
+        } else {
+            System.out.println("DEBUG: Unknown state in paintComponent: " + gameState);
         }
 
         if (keyH.checkDrawTime == true) {
@@ -184,7 +250,6 @@ public class GamePanel extends JPanel implements Runnable {
 
         g2.dispose();
     }
-
     public void playMusic(int i) {
         sound.setFile(i);
         sound.play();

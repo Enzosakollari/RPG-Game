@@ -87,6 +87,27 @@ public class UI {
         gp.gameState = gp.gameOverState;
     }
 
+    public void drawLoadGameScreen() {
+        System.out.println("DEBUG: drawLoadGameScreen() called");
+
+        drawNameEntryScreen();
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
+        g2.setColor(new Color(212, 175, 55));
+
+        String text = "";
+        int x = getXforCenteredText(text);
+        int y = gp.screenHeight / 2 + gp.tileSize;
+        g2.drawString(text, x, y);
+
+        g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 18F));
+        g2.setColor(new Color(150, 150, 150));
+        String instructions = "Press ENTER to load game, ESC to go back";
+        x = getXforCenteredText(instructions);
+        y = gp.screenHeight - gp.tileSize;
+        g2.drawString(instructions, x, y);
+
+        System.out.println("DEBUG: drawLoadGameScreen() completed");
+    }
     public void drawScrollWindow(int x, int y, int width, int height) {
         if (scrollImage != null) {
             // For tile-based games, simple scaling often works better
@@ -117,32 +138,52 @@ public class UI {
         g2.setFont(dragonSlayer);
         g2.setColor(Color.white);
 
+        System.out.println("DEBUG UI: Current gameState = " + gp.gameState + ", drawing state...");
+
         if (gp.gameState == gp.titleState) {
+            System.out.println("DEBUG UI: Drawing title screen");
             drawTitleScreen();
         }
-        if (gp.gameState == gp.playState) {
+        else if (gp.gameState == gp.playState) {
+            System.out.println("DEBUG UI: Drawing play state");
             drawPlayerLife();
             currentDialogue = "";
         }
-        if (gp.gameState == gp.pauseState) {
+        else if (gp.gameState == gp.pauseState) {
+            System.out.println("DEBUG UI: Drawing pause screen");
             drawPlayerLife();
             drawPauseScreen();
         }
-        if (gp.gameState == gp.dialogueState) {
+        else if (gp.gameState == gp.dialogueState) {
+            System.out.println("DEBUG UI: Drawing dialogue screen");
             drawPlayerLife();
             drawDialogueScreen();
         }
-        if (gp.gameState == gp.nameState) {
+        else if (gp.gameState == gp.nameState) {
+            System.out.println("DEBUG UI: Drawing name entry screen");
             drawNameEntryScreen();
         }
-        if (gp.gameState == gp.classState) {
+        else if (gp.gameState == gp.classState) {
+            System.out.println("DEBUG UI: Drawing class selection screen");
             drawClassSelectionScreen();
         }
-        if (gp.gameState == gp.gameOverState) {
+        else if (gp.gameState == gp.gameOverState) {
+            System.out.println("DEBUG UI: Drawing game over screen");
             drawGameOverScreen();
         }
+        else if (gp.gameState == gp.loadState) {
+            System.out.println("DEBUG UI: Drawing load game screen");
+            drawLoadGameScreen();
+        }
+        else {
+            System.out.println("DEBUG UI: UNKNOWN STATE - Drawing black screen");
+            // Fallback: draw a black screen with state info
+            g2.setColor(Color.BLACK);
+            g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
+            g2.setColor(Color.RED);
+            g2.drawString("Unknown State: " + gp.gameState, 50, 50);
+        }
     }
-
     public void drawGameOverScreen() {
         if (gameOverImage != null) {
             g2.drawImage(gameOverImage, 0, 0, gp.screenWidth, gp.screenHeight, null);

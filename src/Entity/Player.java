@@ -591,6 +591,8 @@ public class Player extends Entity {
 
     public void draw(Graphics2D g2) {
         BufferedImage image = getCurrentImage();
+
+
         if (image != null) {
             int screenX = worldx - gp.getCameraX();
             int screenY = worldy - gp.getCameraY();

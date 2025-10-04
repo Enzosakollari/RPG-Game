@@ -30,7 +30,7 @@ public class KeyHandler implements KeyListener {
         }
         // NAME ENTRY STATE
         else if (gp.gameState == gp.nameState) {
-            nameStateInput(code, e);
+            nameStateInput(code, e); // This handles ALL name state input including typing
         }
         // CLASS SELECTION STATE
         else if (gp.gameState == gp.classState) {
@@ -70,6 +70,8 @@ public class KeyHandler implements KeyListener {
                 // NEW GAME
                 gp.gameState = gp.nameState;
                 gp.ui.playerName = ""; // Reset name
+                gp.ui.usernameTaken = false; // Reset validation state
+                gp.ui.usernameErrorMessage = ""; // Clear error message
                 System.out.println("DEBUG: Switching to nameState (New Game)");
             }
             if (gp.ui.commandNum == 1) {
@@ -122,18 +124,23 @@ public class KeyHandler implements KeyListener {
 
     private void nameStateInput(int code, KeyEvent e) {
         if (code == KeyEvent.VK_ENTER) {
-            if (gp.ui.playerName != null && !gp.ui.playerName.isEmpty()) {
-                gp.gameState = gp.classState;
-                System.out.println("DEBUG: Switching to classState");
-            }
+            gp.ui.submitPlayerName(); // This will validate and only proceed if username is available
         } else if (code == KeyEvent.VK_ESCAPE) {
             gp.gameState = gp.titleState;
             gp.ui.playerName = "";
+            gp.ui.usernameTaken = false; // Reset validation state
+            gp.ui.usernameErrorMessage = ""; // Clear error message
             System.out.println("DEBUG: Returning to title from name entry");
         } else if (Character.isLetterOrDigit(e.getKeyChar()) || e.getKeyChar() == ' ') {
             gp.ui.playerName += e.getKeyChar();
+            // Clear validation error when user starts typing again
+            gp.ui.usernameTaken = false;
+            gp.ui.usernameErrorMessage = "";
         } else if (code == KeyEvent.VK_BACK_SPACE && gp.ui.playerName.length() > 0) {
             gp.ui.playerName = gp.ui.playerName.substring(0, gp.ui.playerName.length() - 1);
+            // Clear validation error when user edits the name
+            gp.ui.usernameTaken = false;
+            gp.ui.usernameErrorMessage = "";
         }
     }
 

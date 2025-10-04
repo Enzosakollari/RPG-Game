@@ -54,10 +54,25 @@ public class Main {
             return;
         }
 
-        Integer playerId = DatabaseConnection.savePlayer(playerName.trim(), playerClass.trim());
+        String trimmedName = playerName.trim();
+
+        // Check if username already exists
+        if (isUsernameTaken(trimmedName)) {
+            System.out.println("Username '" + trimmedName + "' is already taken");
+            CURRENT_PLAYER_ID = null;
+            CURRENT_PLAYER_NAME = null;
+
+            JOptionPane.showMessageDialog(null,
+                    "Username '" + trimmedName + "' is already taken by another player.\nPlease choose a different username.",
+                    "Username Taken",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Integer playerId = DatabaseConnection.savePlayer(trimmedName, playerClass.trim());
         if (playerId != null) {
             CURRENT_PLAYER_ID = playerId;
-            CURRENT_PLAYER_NAME = playerName.trim();
+            CURRENT_PLAYER_NAME = trimmedName;
             System.out.println("Player saved with ID: " + CURRENT_PLAYER_ID);
 
             JOptionPane.showMessageDialog(null,
@@ -74,6 +89,12 @@ public class Main {
                     "Save Error",
                     JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    // Method to check if username is already taken
+    private static boolean isUsernameTaken(String username) {
+        DatabaseConnection.PlayerData existingPlayer = DatabaseConnection.getPlayerByUsername(username);
+        return existingPlayer != null;
     }
 
     public static boolean loadPlayerData(String username) {

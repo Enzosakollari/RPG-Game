@@ -31,6 +31,10 @@ public class UI {
     public int commandNum = 0;
     BufferedImage titleBackgroundImage;
 
+    // Add these fields for username validation
+    public boolean usernameTaken = false;
+    public String usernameErrorMessage = "";
+
     // Tile-based constants
     private final int SCROLL_MIN_HEIGHT_TILES = 6;
     private final int SCROLL_MAX_WIDTH_TILES = 16;
@@ -66,15 +70,41 @@ public class UI {
         }
 
         // Create HUD Object
-//        SuperObject heart = new OBJ_LIFE(gp);
-//        fullheart = heart.image;
-//        halfheart = heart.image2;
-//        emptyheart = heart.image3;
-         Entity heart=new OBJ_LIFE(gp);
-        fullheart=heart.image;
+        Entity heart = new OBJ_LIFE(gp);
+        fullheart = heart.image;
         halfheart = heart.image2;
         emptyheart = heart.image3;
+    }
 
+    // Add this method to check if username is taken
+    private boolean isUsernameTaken(String username) {
+        // Use the existing DatabaseConnection method to check if username exists
+        DatabaseConnection.PlayerData existingPlayer = DatabaseConnection.getPlayerByUsername(username);
+        return existingPlayer != null;
+    }
+
+    // Add this method to handle name submission and validation
+    public void submitPlayerName() {
+        if (playerName == null || playerName.trim().isEmpty()) {
+            usernameTaken = false;
+            usernameErrorMessage = "Name cannot be empty!";
+            return;
+        }
+
+        String trimmedName = playerName.trim();
+
+        // Check if username is already taken
+        if (isUsernameTaken(trimmedName)) {
+            usernameTaken = true;
+            usernameErrorMessage = "Username '" + trimmedName + "' is already taken!";
+            System.out.println("Username '" + trimmedName + "' is already taken");
+        } else {
+            usernameTaken = false;
+            usernameErrorMessage = "";
+            // Only proceed to class selection if username is available
+            gp.gameState = gp.classState;
+            System.out.println("Username '" + trimmedName + "' is available, proceeding to class selection");
+        }
     }
 
     public void showMessage(String text) {
@@ -108,6 +138,7 @@ public class UI {
 
         System.out.println("DEBUG: drawLoadGameScreen() completed");
     }
+
     public void drawScrollWindow(int x, int y, int width, int height) {
         if (scrollImage != null) {
             // For tile-based games, simple scaling often works better
@@ -184,6 +215,7 @@ public class UI {
             g2.drawString("Unknown State: " + gp.gameState, 50, 50);
         }
     }
+
     public void drawGameOverScreen() {
         if (gameOverImage != null) {
             g2.drawImage(gameOverImage, 0, 0, gp.screenWidth, gp.screenHeight, null);
@@ -269,6 +301,7 @@ public class UI {
             }
         }
     }
+
     public void drawDialogueScreen() {
         if (currentDialogue == null || currentDialogue.isEmpty()) return;
 
@@ -423,9 +456,27 @@ public class UI {
         g2.drawString(text, x, y);
 
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 28F));
-        x = getXforCenteredText(playerName + ">");
+        x = getXforCenteredText(">" + playerName);
         y += gp.tileSize * 1.5;
-        g2.drawString(">"+playerName, x, y);
+        g2.drawString(">" + playerName, x, y);
+
+        // Display error message if username is taken or invalid
+        if (usernameTaken || (!usernameErrorMessage.isEmpty() && !playerName.trim().isEmpty())) {
+            g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20F));
+            g2.setColor(Color.RED);
+            String errorText = usernameErrorMessage;
+            x = getXforCenteredText(errorText);
+            y += gp.tileSize * 1.5;
+            g2.drawString(errorText, x, y);
+
+            // Add instructions for what to do
+            g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 16F));
+            g2.setColor(Color.YELLOW);
+            String instructionText = "Please edit your name and press ENTER again";
+            x = getXforCenteredText(instructionText);
+            y += gp.tileSize;
+            g2.drawString(instructionText, x, y);
+        }
 
         // Add instructions - keep at bottom of screen
         g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 18F));

@@ -16,8 +16,11 @@ public class Entity {
     public BufferedImage up1, up2, right1, right2, left1, left2, down1, down2;
     public String direction = "down";
     public int spriteCounter = 0;
+    public int playerDamage;
+    public int monsterDamage;
     public int spriteNum = 1;
     public Rectangle solidArea = new Rectangle(0, 0, 48, 48);
+    public Rectangle attackArea = new Rectangle(0,0,0,0);
     public int solidAreaDefaultX = 0;
     public int solidAreaDefaultY = 0;
     public boolean collisionOn = false;
@@ -49,6 +52,25 @@ public class Entity {
     }
 
     public void setAction() {
+    }
+    // Add to Entity class
+    public void takeDamage(int damage) {
+        if (!invisible && isAlive()) {
+            currentLife -= damage;
+            invisible = true;
+            invisibleCounter = 0;
+
+            if (currentLife <= 0) {
+                currentLife = 0;
+                // Monster is now dead - it will be removed in the update/draw cycle
+                System.out.println(name + " defeated!");
+            }
+        }
+    }
+
+
+    public boolean isAlive() {
+        return currentLife > 0;
     }
 
     public void speak() {
@@ -90,6 +112,11 @@ public class Entity {
     }
 
     public void update() {
+        // NEW: Skip update if monster is dead
+        if (isMonster && !isAlive()) {
+            return;
+        }
+
         setAction();
         collisionOn = false;
         gp.cChecker.CheckTile(this);
@@ -102,8 +129,8 @@ public class Entity {
             boolean contactPlayer = gp.cChecker.checkPlayer(this);
             if (contactPlayer) {
                 // Cast to Slime to call attackPlayer method
-                if (this instanceof Monster.Slime) {
-                    ((Monster.Slime) this).attackPlayer();
+                if (this instanceof monster.Slime) {
+                    ((monster.Slime) this).attackPlayer();
                 }
             }
         }
@@ -142,7 +169,6 @@ public class Entity {
             }
         }
     }
-
     public void setupSimple(String basePath, String spriteName) {
         UtilityTool uTool = new UtilityTool();
 
@@ -202,6 +228,11 @@ public class Entity {
     }
 
     public void draw(Graphics2D g2) {
+        // NEW: Don't draw if monster is dead
+        if (isMonster && !isAlive()) {
+            return;
+        }
+
         BufferedImage image = null;
 
         switch (direction) {
@@ -228,7 +259,6 @@ public class Entity {
             }
         }
     }
-
     private boolean isOnScreen(int screenX, int screenY) {
         return screenX + gp.tileSize > 0 &&
                 screenX - gp.tileSize < gp.screenWidth &&

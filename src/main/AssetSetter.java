@@ -4,8 +4,7 @@ import Entity.NPC_GHOST;
 import Entity.NPC_NECROMANCER;
 import Entity.NPC_OldMan;
 
-import Monster.Slime;
-import Monster.Snake;
+import monster.*;
 import Objects.*;
 
 public class AssetSetter {
@@ -152,5 +151,17 @@ public class AssetSetter {
         gp.monsters[4]=new Snake(gp);
         gp.monsters[4].worldx = 50 * gp.tileSize;
         gp.monsters[4].worldy = 50 * gp.tileSize;
+
+        gp.monsters[5]=new Bat(gp);
+        gp.monsters[5].worldx = 40 * gp.tileSize;
+        gp.monsters[5].worldy = 80 * gp.tileSize;
+
+        gp.monsters[6]=new GrimReaper(gp);
+        gp.monsters[6].worldx = 17 * gp.tileSize;
+        gp.monsters[6].worldy = 89 * gp.tileSize;
+
+        gp.monsters[7]=new Blueghost(gp);
+        gp.monsters[7].worldx = 77 * gp.tileSize;
+        gp.monsters[7].worldy = 90 * gp.tileSize;
     }
 }

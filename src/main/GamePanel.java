@@ -13,8 +13,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class GamePanel extends JPanel implements Runnable {
 
+
+public class GamePanel extends JPanel implements Runnable {
     final int originalTileSize = 16;
     final int scale = 3;
     public final int tileSize = originalTileSize * scale;
@@ -129,15 +130,14 @@ public class GamePanel extends JPanel implements Runnable {
         player.loadFromDatabase();
 
         gameState = playState;
-        System.out.println("Game state loaded for: " + Main.CURRENT_PLAYER_NAME);
     }
     public void update() {
         if (gameState == playState) {
             player.update();
 
+            // Check if player died and trigger game over
             if (player.currentLife <= 0 && !ui.gameOver) {
                 ui.triggerGameOver();
-                gameState = gameOverState;
                 return;
             }
 
@@ -151,12 +151,14 @@ public class GamePanel extends JPanel implements Runnable {
                     monsters[i].update();
                 }
             }
+
+            // Remove dead monsters from the game world
+            removeDeadMonsters();
+
         } else if (gameState == pauseState) {
-
+            // Pause state logic
         }
-    }
-
-    @Override
+    }    @Override
     public void run() {
         double drawInterval = 1000000000 / FPS;
         double nextDrawTime = System.nanoTime() + drawInterval;
@@ -192,15 +194,17 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         // DEBUG: Print game state
-        System.out.println("DEBUG GamePanel paint: gameState = " + gameState);
 
         // Title, Name, Class, Load Game, and Game Over screens only draw UI
         if (gameState == titleState || gameState == nameState ||
-                gameState == classState || gameState == gameOverState || gameState == loadState) {
-            System.out.println("DEBUG: Drawing UI only for state: " + gameState);
+                gameState == classState  || gameState == loadState) {
             ui.draw(g2);
-        } else if (gameState == playState || gameState == pauseState || gameState == dialogueState) {
-            System.out.println("DEBUG: Drawing game world for state: " + gameState);
+        }
+        else if(gameState==gameOverState){
+            ui.draw(g2);
+            stopMusic();
+        }
+        else if (gameState == playState || gameState == pauseState || gameState == dialogueState) {
             tileM.draw(g2);
 
             // Build entity list for this frame
@@ -237,7 +241,6 @@ public class GamePanel extends JPanel implements Runnable {
                 ui.drawPauseScreen();
             }
         } else {
-            System.out.println("DEBUG: Unknown state in paintComponent: " + gameState);
         }
 
         if (keyH.checkDrawTime == true) {
@@ -264,24 +267,15 @@ public class GamePanel extends JPanel implements Runnable {
         sound.setFile(i);
         sound.play();
     }
-
-    private boolean isPlayerBehindTree() {
-        int playerCol = player.worldx / tileSize;
-        int playerRow = player.worldy / tileSize;
-
-
-        int[] treeTiles = {4};
-
-        if (playerCol >= 0 && playerCol < maxWorldCol && playerRow >= 0 && playerRow < maxWorldRow) {
-            int tileNum = tileM.mapTileNum[playerCol][playerRow];
-            for (int treeTile : treeTiles) {
-                if (tileNum == treeTile) {
-                    return true;
-                }
+    public void removeDeadMonsters() {
+        for (int i = 0; i < monsters.length; i++) {
+            if (monsters[i] != null && !monsters[i].isAlive()) {
+                monsters[i] = null;
             }
         }
-        return false;
     }
+
+
 
     public int getCameraX() {
         int cameraX = player.worldx - player.screenX;

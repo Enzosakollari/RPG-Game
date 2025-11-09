@@ -169,46 +169,35 @@ public class UI {
         g2.setFont(dragonSlayer);
         g2.setColor(Color.white);
 
-        System.out.println("DEBUG UI: Current gameState = " + gp.gameState + ", drawing state...");
 
         if (gp.gameState == gp.titleState) {
-            System.out.println("DEBUG UI: Drawing title screen");
             drawTitleScreen();
         }
         else if (gp.gameState == gp.playState) {
-            System.out.println("DEBUG UI: Drawing play state");
             drawPlayerLife();
             currentDialogue = "";
         }
         else if (gp.gameState == gp.pauseState) {
-            System.out.println("DEBUG UI: Drawing pause screen");
             drawPlayerLife();
             drawPauseScreen();
         }
         else if (gp.gameState == gp.dialogueState) {
-            System.out.println("DEBUG UI: Drawing dialogue screen");
             drawPlayerLife();
             drawDialogueScreen();
         }
         else if (gp.gameState == gp.nameState) {
-            System.out.println("DEBUG UI: Drawing name entry screen");
             drawNameEntryScreen();
         }
         else if (gp.gameState == gp.classState) {
-            System.out.println("DEBUG UI: Drawing class selection screen");
             drawClassSelectionScreen();
         }
         else if (gp.gameState == gp.gameOverState) {
-            System.out.println("DEBUG UI: Drawing game over screen");
             drawGameOverScreen();
         }
         else if (gp.gameState == gp.loadState) {
-            System.out.println("DEBUG UI: Drawing load game screen");
             drawLoadGameScreen();
         }
         else {
-            System.out.println("DEBUG UI: UNKNOWN STATE - Drawing black screen");
-            // Fallback: draw a black screen with state info
             g2.setColor(Color.BLACK);
             g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
             g2.setColor(Color.RED);

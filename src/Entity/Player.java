@@ -14,8 +14,11 @@ import java.io.IOException;
 
 public class Player extends Entity {
     private final KeyHandler keyH;
+    private long lastFootstepTime = 0;
+    private final long FOOTSTEP_INTERVAL = 700;
     public final int screenX;
     public final int screenY;
+
     public int hasKey = 0;
     public String playerName = "";
     public String playerClass = "";
@@ -24,9 +27,12 @@ public class Player extends Entity {
     public Player(GamePanel gp, KeyHandler keyH) {
         super(gp);
         this.keyH = keyH;
+        this.playerDamage=2;
 
         screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
+        attackArea.width=36;
+        attackArea.height=36;
 
         direction = "down";
         setup();
@@ -46,8 +52,8 @@ public class Player extends Entity {
     }
 
     public void setDefaultValues() {
-        worldx = gp.tileSize * 70;
-        worldy = gp.tileSize * 50;
+        worldx = gp.tileSize * 10;
+        worldy = gp.tileSize * 92;
         speed = 9;
         direction = "down";
         maxLife = 6;
@@ -309,9 +315,7 @@ public class Player extends Entity {
     public void update() {
         boolean moving = false;
 
-        // -----------------------
-        // Movement input
-        // -----------------------
+        // Movement input (your existing code)
         if (keyH.upPressed) {
             direction = "up";
             moving = true;
@@ -326,13 +330,16 @@ public class Player extends Entity {
             moving = true;
         }
 
-        if (direction == null) {
-            direction = "down";
+        // Play footstep sound with proper timing
+        if (moving && !collisionOn) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastFootstepTime >= FOOTSTEP_INTERVAL) {
+                gp.playSE(6); // Play sound effect no 6
+                lastFootstepTime = currentTime; // Reset timer
+            }
         }
 
-        // -----------------------
-        // Collision checks
-        // -----------------------
+        // Rest of your existing update code...
         collisionOn = false;
         gp.cChecker.CheckTile(this);
 
@@ -366,6 +373,13 @@ public class Player extends Entity {
         }
 
         // -----------------------
+        // NEW: Check attack collision (THIS IS THE KEY ADDITION!)
+        // -----------------------
+        if (attacking) {
+            checkAttack(); // This actually damages monsters!
+        }
+
+        // -----------------------
         // Movement execution
         // -----------------------
         if (moving && !collisionOn) {
@@ -394,8 +408,14 @@ public class Player extends Entity {
         // -----------------------
         spriteCounter++;
         if (spriteCounter > 10) {
+            int oldSpriteNum = spriteNum; // Store old sprite number
             spriteNum = (spriteNum == 1) ? 2 : 1;
             spriteCounter = 0;
+
+            // NEW: Check attack collision when sprite changes during attack
+            if (attacking && oldSpriteNum != spriteNum) {
+                checkAttack(); // Additional hit check
+            }
         }
 
         // -----------------------
@@ -414,6 +434,12 @@ public class Player extends Entity {
         // -----------------------
         if (attacking) {
             attackCounter++;
+
+            // NEW: Additional hit check at specific frames for better hit detection
+            if (attackCounter == 5 || attackCounter == 15) {
+                checkAttack(); // More hit checks
+            }
+
             if (attackCounter > 20) {
                 attacking = false;
                 attackCounter = 0;
@@ -427,9 +453,7 @@ public class Player extends Entity {
                 gp.saveCounter = 0;
             }
         }
-    }
-
-    public void handleInteractionKey() {
+    }    public void handleInteractionKey() {
         if (gp.keyH.interactPressed) {
             int npcIndex = gp.cChecker.checkEntity(this, gp.npc);
 
@@ -578,7 +602,7 @@ public class Player extends Entity {
     public void contactMonster(int i) {
         if (i != 999) {
             if (invisible == false) {
-                currentLife -= 1;
+                currentLife -= monsterDamage;
                 invisible = true;
 
                 // Save health update to database
@@ -588,11 +612,67 @@ public class Player extends Entity {
             }
         }
     }
+    public void checkAttack() {
+        if (attacking) {
+            // Set attack area position based on direction and current sprite
+            int attackX = worldx;
+            int attackY = worldy;
+            int attackWidth = attackArea.width;
+            int attackHeight = attackArea.height;
 
+            // Adjust attack area based on direction
+            switch (direction) {
+                case "up":
+                    attackX += solidArea.x + (solidArea.width - attackWidth) / 2;
+                    attackY += solidArea.y - attackHeight;
+                    break;
+                case "down":
+                    attackX += solidArea.x + (solidArea.width - attackWidth) / 2;
+                    attackY += solidArea.y + solidArea.height;
+                    break;
+                case "left":
+                    attackX += solidArea.x - attackWidth;
+                    attackY += solidArea.y + (solidArea.height - attackHeight) / 2;
+                    break;
+                case "right":
+                    attackX += solidArea.x + solidArea.width;
+                    attackY += solidArea.y + (solidArea.height - attackHeight) / 2;
+                    break;
+            }
+
+            // Set the attack area
+            attackArea.x = attackX;
+            attackArea.y = attackY;
+
+            // Check collision with all monsters
+            for (int i = 0; i < gp.monsters.length; i++) {
+                if (gp.monsters[i] != null && gp.monsters[i].isAlive()) {
+                    // Get monster's solid area in world coordinates
+                    Rectangle monsterArea = new Rectangle(
+                            gp.monsters[i].worldx + gp.monsters[i].solidArea.x,
+                            gp.monsters[i].worldy + gp.monsters[i].solidArea.y,
+                            gp.monsters[i].solidArea.width,
+                            gp.monsters[i].solidArea.height
+                    );
+
+                    // Check if attack area intersects with monster
+                    if (attackArea.intersects(monsterArea)) {
+                        gp.monsters[i].takeDamage(1); // Deal 1 damage
+                        gp.playSE(6); // Attack hit sound
+                        System.out.println("Hit " + gp.monsters[i].name + "! Remaining HP: " + gp.monsters[i].currentLife);
+
+                        // Check if monster died from this hit
+                        if (!gp.monsters[i].isAlive()) {
+                            System.out.println(gp.monsters[i].name + " has been defeated!");
+                            // The monster will be removed in the next game loop
+                        }
+                    }
+                }
+            }
+        }
+    }
     public void draw(Graphics2D g2) {
         BufferedImage image = getCurrentImage();
-
-
         if (image != null) {
             int screenX = worldx - gp.getCameraX();
             int screenY = worldy - gp.getCameraY();
@@ -600,36 +680,44 @@ public class Player extends Entity {
             int drawWidth = image.getWidth();
             int drawHeight = image.getHeight();
 
-            // Adjust position for larger attack sprites to keep them centered
+            int tempScreenX = screenX;
+            int tempScreenY = screenY;
+
+            // Adjust sword position (not the player)
             if (attacking) {
                 switch (direction) {
                     case "up":
-                        screenY -= (drawHeight - gp.tileSize); // Move up for upward attack
+                        tempScreenY = screenY - (drawHeight - gp.tileSize);
+                        break;
+                    case "down":
+                        // Attack naturally extends downward
                         break;
                     case "left":
-                        screenX -= (drawWidth - gp.tileSize); // Move left for left attack
+                        // Move sword slightly left but keep player centered
+                        tempScreenX = screenX - (drawWidth - gp.tileSize);
                         break;
-                    // For down and right, we keep the same position since attack extends downward/rightward
+                    case "right":
+                        // Move sword slightly right but keep player centered
+                        tempScreenX = screenX;
+                        break;
                 }
             }
 
-            if (screenX + drawWidth > 0 && screenX < gp.screenWidth &&
-                    screenY + drawHeight > 0 && screenY < gp.screenHeight) {
+            // Only draw if visible on screen
+            if (tempScreenX + drawWidth > 0 && tempScreenX < gp.screenWidth &&
+                    tempScreenY + drawHeight > 0 && tempScreenY < gp.screenHeight) {
 
                 if (invisible) {
                     AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
                     g2.setComposite(alphaComposite);
-
-                    g2.drawImage(image, screenX, screenY, drawWidth, drawHeight, null);
-
+                    g2.drawImage(image, tempScreenX, tempScreenY, drawWidth, drawHeight, null);
                     g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
                 } else {
-                    g2.drawImage(image, screenX, screenY, drawWidth, drawHeight, null);
+                    g2.drawImage(image, tempScreenX, tempScreenY, drawWidth, drawHeight, null);
                 }
             }
         }
     }
-
     private BufferedImage getCurrentImage() {
         BufferedImage image = null;
 

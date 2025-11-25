@@ -131,10 +131,7 @@ public class UI {
 
         g2.setFont(g2.getFont().deriveFont(Font.ITALIC, 18F));
         g2.setColor(new Color(150, 150, 150));
-        String instructions = "Press ENTER to load game, ESC to go back";
-        x = getXforCenteredText(instructions);
         y = gp.screenHeight - gp.tileSize;
-        g2.drawString(instructions, x, y);
 
         System.out.println("DEBUG: drawLoadGameScreen() completed");
     }

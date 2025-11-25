@@ -27,12 +27,14 @@ public class Player extends Entity {
     public Player(GamePanel gp, KeyHandler keyH) {
         super(gp);
         this.keyH = keyH;
-        this.playerDamage=2;
+        this.playerDamage = 2;
 
         screenX = gp.screenWidth / 2 - (gp.tileSize / 2);
         screenY = gp.screenHeight / 2 - (gp.tileSize / 2);
-        attackArea.width=36;
-        attackArea.height=36;
+
+        // Make attack area larger for better hit detection
+        attackArea.width = 48;
+        attackArea.height = 48;
 
         direction = "down";
         setup();
@@ -56,7 +58,7 @@ public class Player extends Entity {
         worldy = gp.tileSize * 92;
         speed = 9;
         direction = "down";
-        maxLife = 6;
+        maxLife = 10;
         currentLife = maxLife;
         hasKey = 0;
     }
@@ -315,7 +317,7 @@ public class Player extends Entity {
     public void update() {
         boolean moving = false;
 
-        // Movement input (your existing code)
+        // Movement input
         if (keyH.upPressed) {
             direction = "up";
             moving = true;
@@ -355,9 +357,7 @@ public class Player extends Entity {
 
         gp.eHandler.checkEvent();
 
-        // -----------------------
         // Handle Interactions / Attack
-        // -----------------------
         if (gp.keyH.interactPressed) {
             if (npcIndex != 999) {
                 // Talk to NPC
@@ -372,16 +372,12 @@ public class Player extends Entity {
             gp.keyH.interactPressed = false; // reset so it doesn't repeat instantly
         }
 
-        // -----------------------
         // NEW: Check attack collision (THIS IS THE KEY ADDITION!)
-        // -----------------------
         if (attacking) {
             checkAttack(); // This actually damages monsters!
         }
 
-        // -----------------------
         // Movement execution
-        // -----------------------
         if (moving && !collisionOn) {
             switch (direction) {
                 case "up":
@@ -403,9 +399,7 @@ public class Player extends Entity {
         worldx = Math.max(0, Math.min(worldx, gp.worldWidth - gp.tileSize));
         worldy = Math.max(0, Math.min(worldy, gp.worldHeight - gp.tileSize));
 
-        // -----------------------
         // Animation update
-        // -----------------------
         spriteCounter++;
         if (spriteCounter > 10) {
             int oldSpriteNum = spriteNum; // Store old sprite number
@@ -418,9 +412,7 @@ public class Player extends Entity {
             }
         }
 
-        // -----------------------
         // Invisible timer
-        // -----------------------
         if (invisible) {
             invisibleCounter++;
             if (invisibleCounter > 60) {
@@ -429,9 +421,7 @@ public class Player extends Entity {
             }
         }
 
-        // -----------------------
         // Attack animation timing
-        // -----------------------
         if (attacking) {
             attackCounter++;
 
@@ -453,7 +443,9 @@ public class Player extends Entity {
                 gp.saveCounter = 0;
             }
         }
-    }    public void handleInteractionKey() {
+    }
+
+    public void handleInteractionKey() {
         if (gp.keyH.interactPressed) {
             int npcIndex = gp.cChecker.checkEntity(this, gp.npc);
 
@@ -592,6 +584,7 @@ public class Player extends Entity {
             System.out.println("Unknown object: " + objectName);
         }
     }
+
     public void interactNPC(int i) {
         if (i != 999 && gp.npc[i] != null) {
             gp.gameState = gp.dialogueState;
@@ -612,66 +605,61 @@ public class Player extends Entity {
             }
         }
     }
+
     public void checkAttack() {
         if (attacking) {
-            // Set attack area position based on direction and current sprite
-            int attackX = worldx;
-            int attackY = worldy;
-            int attackWidth = attackArea.width;
-            int attackHeight = attackArea.height;
+            System.out.println("=== ATTACK DEBUG ===");
+            System.out.println("Player position: " + worldx + ", " + worldy);
+            System.out.println("Player direction: " + direction);
 
-            // Adjust attack area based on direction
-            switch (direction) {
-                case "up":
-                    attackX += solidArea.x + (solidArea.width - attackWidth) / 2;
-                    attackY += solidArea.y - attackHeight;
-                    break;
-                case "down":
-                    attackX += solidArea.x + (solidArea.width - attackWidth) / 2;
-                    attackY += solidArea.y + solidArea.height;
-                    break;
-                case "left":
-                    attackX += solidArea.x - attackWidth;
-                    attackY += solidArea.y + (solidArea.height - attackHeight) / 2;
-                    break;
-                case "right":
-                    attackX += solidArea.x + solidArea.width;
-                    attackY += solidArea.y + (solidArea.height - attackHeight) / 2;
-                    break;
-            }
+            // REDUCED RANGE - Only 1.5 tiles for melee combat
+            int attackRange = gp.tileSize + (gp.tileSize / 2); // 1.5 tiles
+            int playerCenterX = worldx + solidArea.x + solidArea.width/2;
+            int playerCenterY = worldy + solidArea.y + solidArea.height/2;
 
-            // Set the attack area
-            attackArea.x = attackX;
-            attackArea.y = attackY;
-
-            // Check collision with all monsters
+            boolean hitSomething = false;
             for (int i = 0; i < gp.monsters.length; i++) {
                 if (gp.monsters[i] != null && gp.monsters[i].isAlive()) {
-                    // Get monster's solid area in world coordinates
-                    Rectangle monsterArea = new Rectangle(
-                            gp.monsters[i].worldx + gp.monsters[i].solidArea.x,
-                            gp.monsters[i].worldy + gp.monsters[i].solidArea.y,
-                            gp.monsters[i].solidArea.width,
-                            gp.monsters[i].solidArea.height
-                    );
+                    // Get monster's center position
+                    int monsterCenterX = gp.monsters[i].worldx + gp.monsters[i].solidArea.x + gp.monsters[i].solidArea.width/2;
+                    int monsterCenterY = gp.monsters[i].worldy + gp.monsters[i].solidArea.y + gp.monsters[i].solidArea.height/2;
 
-                    // Check if attack area intersects with monster
-                    if (attackArea.intersects(monsterArea)) {
-                        gp.monsters[i].takeDamage(1); // Deal 1 damage
-                        gp.playSE(6); // Attack hit sound
-                        System.out.println("Hit " + gp.monsters[i].name + "! Remaining HP: " + gp.monsters[i].currentLife);
+                    // Calculate distance
+                    int distance = (int) Math.sqrt(Math.pow(monsterCenterX - playerCenterX, 2) + Math.pow(monsterCenterY - playerCenterY, 2));
 
-                        // Check if monster died from this hit
+                    System.out.println("Checking " + gp.monsters[i].name +
+                            " at distance: " + distance + " pixels (range: " + attackRange + ")");
+
+                    // Check if monster is within attack range
+                    if (distance <= attackRange) {
+                        System.out.println("HIT! " + gp.monsters[i].name);
+
+                        // DEBUG: Check monster state before damage
+                        System.out.println("Before damage - Life: " + gp.monsters[i].currentLife + ", MaxLife: " + gp.monsters[i].maxLife);
+
+                        // Apply damage
+                        gp.monsters[i].takeDamage(playerDamage);
+                        gp.playSE(6);
+                        hitSomething = true;
+
+                        // DEBUG: Check monster state after damage
+                        System.out.println("After damage - Life: " + gp.monsters[i].currentLife + ", Alive: " + gp.monsters[i].isAlive());
+
                         if (!gp.monsters[i].isAlive()) {
                             System.out.println(gp.monsters[i].name + " has been defeated!");
-                            // The monster will be removed in the next game loop
                         }
+                    } else {
+                        System.out.println("Missed " + gp.monsters[i].name + " - too far");
                     }
                 }
             }
+
+            if (!hitSomething) {
+                System.out.println("Attack didn't hit anything - all monsters out of range");
+            }
+            System.out.println("=== END ATTACK DEBUG ===");
         }
-    }
-    public void draw(Graphics2D g2) {
+    }    public void draw(Graphics2D g2) {
         BufferedImage image = getCurrentImage();
         if (image != null) {
             int screenX = worldx - gp.getCameraX();
@@ -718,6 +706,7 @@ public class Player extends Entity {
             }
         }
     }
+
     private BufferedImage getCurrentImage() {
         BufferedImage image = null;
 
@@ -754,5 +743,16 @@ public class Player extends Entity {
         }
 
         return image;
+    }
+
+    // Temporary debug method - call this when you press a specific key to test damage
+    public void debugDamageGhost() {
+        for (int i = 0; i < gp.monsters.length; i++) {
+            if (gp.monsters[i] != null && gp.monsters[i].name.equals("Ghost")) {
+                System.out.println("Forcing damage to ghost!");
+                gp.monsters[i].takeDamage(1);
+                break;
+            }
+        }
     }
 }

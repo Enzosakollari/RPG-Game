@@ -7,6 +7,11 @@ import Entity.NPC_OldMan;
 import monster.*;
 import Objects.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
 public class AssetSetter {
     GamePanel gp;
 
@@ -51,7 +56,7 @@ public class AssetSetter {
         gp.obj[6].worldy = 16 * gp.tileSize;
 
         gp.obj[7] = new OBJ_DOOR(gp);
-        gp.obj[7].worldx = 85 * gp.tileSize;
+        gp.obj[7].worldx = 80 * gp.tileSize;
         gp.obj[7].worldy = 78 * gp.tileSize;
 
         gp.obj[8] = new OBJ_DOOR(gp);
@@ -132,36 +137,164 @@ public class AssetSetter {
     }
 
     public void setMonster() {
-        gp.monsters[0] = new Slime(gp);
-        gp.monsters[0].worldx = 50 * gp.tileSize;
-        gp.monsters[0].worldy = 68 * gp.tileSize;
+        int monsterIndex = 0;
+        Random random = new Random();
 
-        gp.monsters[1] = new Slime(gp);
-        gp.monsters[1].worldx = 20 * gp.tileSize;
-        gp.monsters[1].worldy = 35 * gp.tileSize;
+        // Define monster types
+        Class<?>[] monsterTypes = {Slime.class, Snake.class, Bat.class, Spider.class,
+                Ghost.class, Blueghost.class, GrimReaper.class, Dragon.class};
 
-        gp.monsters[2] = new Slime(gp);
-        gp.monsters[2].worldx = 37 * gp.tileSize;
-        gp.monsters[2].worldy = 50 * gp.tileSize;
+        // First, scan the entire map for valid spawn tiles
+        List<int[]> validSpawnPositions = new ArrayList<>();
+        for (int row = 0; row < 100; row++) {
+            for (int col = 0; col < 100; col++) {
+                if (isValidSpawnTile(row, col)) {
+                    validSpawnPositions.add(new int[]{col, row}); // Store as [x, y]
+                }
+            }
+        }
 
-        gp.monsters[3] = new Slime(gp);
-        gp.monsters[3].worldx = 80 * gp.tileSize;
-        gp.monsters[3].worldy = 86 * gp.tileSize;
+        System.out.println("Valid spawn tiles found: " + validSpawnPositions.size());
 
-        gp.monsters[4]=new Snake(gp);
-        gp.monsters[4].worldx = 50 * gp.tileSize;
-        gp.monsters[4].worldy = 50 * gp.tileSize;
+        // If we found valid positions, spawn monsters randomly across them
+        if (!validSpawnPositions.isEmpty()) {
+            // Shuffle the positions to randomize spawning
+            Collections.shuffle(validSpawnPositions, random);
 
-        gp.monsters[5]=new Bat(gp);
-        gp.monsters[5].worldx = 40 * gp.tileSize;
-        gp.monsters[5].worldy = 80 * gp.tileSize;
+            // Spawn monsters on random valid tiles (use 40% of valid tiles or until array is full)
+            int monstersToSpawn = Math.min(gp.monsters.length, (int)(validSpawnPositions.size() * 0.4));
 
-        gp.monsters[6]=new GrimReaper(gp);
-        gp.monsters[6].worldx = 17 * gp.tileSize;
-        gp.monsters[6].worldy = 89 * gp.tileSize;
+            for (int i = 0; i < monstersToSpawn && monsterIndex < gp.monsters.length; i++) {
+                int[] position = validSpawnPositions.get(i);
+                int col = position[0];
+                int row = position[1];
 
-        gp.monsters[7]=new Blueghost(gp);
-        gp.monsters[7].worldx = 77 * gp.tileSize;
-        gp.monsters[7].worldy = 90 * gp.tileSize;
+                // Randomly select monster type with weighted probabilities
+                Class<?> monsterType = getRandomMonsterType(random);
+
+                try {
+                    // Create monster instance based on type
+                    if (monsterType == Slime.class) {
+                        gp.monsters[monsterIndex] = new Slime(gp);
+                    } else if (monsterType == Snake.class) {
+                        gp.monsters[monsterIndex] = new Snake(gp);
+                    } else if (monsterType == Bat.class) {
+                        gp.monsters[monsterIndex] = new Bat(gp);
+                    } else if (monsterType == Spider.class) {
+                        gp.monsters[monsterIndex] = new Spider(gp);
+                    } else if (monsterType == Ghost.class) {
+                        gp.monsters[monsterIndex] = new Ghost(gp);
+                    } else if (monsterType == Blueghost.class) {
+                        gp.monsters[monsterIndex] = new Blueghost(gp);
+                    } else if (monsterType == GrimReaper.class) {
+                        gp.monsters[monsterIndex] = new GrimReaper(gp);
+                    } else if (monsterType == Dragon.class) {
+                        gp.monsters[monsterIndex] = new Dragon(gp);
+                    }
+
+                    // Set position
+                    gp.monsters[monsterIndex].worldx = col * gp.tileSize;
+                    gp.monsters[monsterIndex].worldy = row * gp.tileSize;
+
+                    monsterIndex++;
+
+                } catch (Exception e) {
+                    System.out.println("Error creating monster at [" + col + "," + row + "]: " + e.getMessage());
+                }
+            }
+        }
+
+        System.out.println("Random monsters placed: " + monsterIndex);
+
+        // Ensure specific boss monsters are placed in valid locations
+        placeBossMonsters(monsterIndex);
+    }
+
+    // Helper method to check if a tile is valid for spawning (0, 3, 4, or 67)
+    private boolean isValidSpawnTile(int row, int col) {
+        int tileValue = getTileValue(row, col);
+        return tileValue == 0 || tileValue == 3 || tileValue == 4 || tileValue == 67;
+    }
+
+    // Helper method to get tile value
+    private int getTileValue(int row, int col) {
+        try {
+            // Adjust this based on your actual map storage
+            // Try both possible configurations since map storage varies
+            if (gp.tileM.mapTileNum != null) {
+                if (col < gp.tileM.mapTileNum.length && row < gp.tileM.mapTileNum[col].length) {
+                    return gp.tileM.mapTileNum[col][row];
+                } else if (row < gp.tileM.mapTileNum.length && col < gp.tileM.mapTileNum[row].length) {
+                    return gp.tileM.mapTileNum[row][col];
+                }
+            }
+            return -1; // Invalid tile
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    // Weighted random monster type selection
+    private Class<?> getRandomMonsterType(Random random) {
+        double rand = random.nextDouble();
+
+        if (rand < 0.30) {      // 30% Slimes (most common)
+            return Slime.class;
+        } else if (rand < 0.50) { // 20% Snakes (common)
+            return Snake.class;
+        } else if (rand < 0.65) { // 15% Bats (common)
+            return Bat.class;
+        } else if (rand < 0.75) { // 10% Spiders (uncommon)
+            return Spider.class;
+        } else if (rand < 0.82) { // 7% Ghosts (uncommon)
+            return Ghost.class;
+        } else if (rand < 0.88) { // 6% Blue Ghosts (uncommon)
+            return Blueghost.class;
+        } else if (rand < 0.96) { // 8% Grim Reapers (rare)
+            return GrimReaper.class;
+        } else {                 // 4% Dragons (very rare)
+            return Dragon.class;
+        }
+    }
+
+    // Place specific boss monsters in valid locations
+    private void placeBossMonsters(int startIndex) {
+        int monsterIndex = startIndex;
+
+        // Try these boss positions in order until we find valid ones
+        int[][] bossPositions = {
+                {17, 89}, {60, 30}, {90, 70}, {35, 85}, {75, 15}, {25, 95},
+                {5, 5}, {95, 95}, {5, 95}, {95, 5}, {50, 50} // Additional boss spots
+        };
+
+        // Place Grim Reapers
+        for (int i = 0; i < bossPositions.length && monsterIndex < gp.monsters.length; i += 2) {
+            int x = bossPositions[i][0];
+            int y = bossPositions[i][1];
+
+            if (isValidSpawnTile(y, x)) {
+                gp.monsters[monsterIndex] = new GrimReaper(gp);
+                gp.monsters[monsterIndex].worldx = x * gp.tileSize;
+                gp.monsters[monsterIndex].worldy = y * gp.tileSize;
+                monsterIndex++;
+                System.out.println("Placed Grim Reaper at [" + x + "," + y + "]");
+                break; // Place one Grim Reaper
+            }
+        }
+
+        // Place Dragons
+        for (int i = 1; i < bossPositions.length && monsterIndex < gp.monsters.length; i += 2) {
+            int x = bossPositions[i][0];
+            int y = bossPositions[i][1];
+
+            if (isValidSpawnTile(y, x)) {
+                gp.monsters[monsterIndex] = new Dragon(gp);
+                gp.monsters[monsterIndex].worldx = x * gp.tileSize;
+                gp.monsters[monsterIndex].worldy = y * gp.tileSize;
+                monsterIndex++;
+                System.out.println("Placed Dragon at [" + x + "," + y + "]");
+                break; // Place one Dragon
+            }
+        }
     }
 }

@@ -39,8 +39,6 @@ The game was packaged as a **native Windows `.exe`** using **`jpackage`** and is
 
 ## 📷 Screenshots
 
-### 🏰 Main Menu / Banner
-![Banner](https://github.com/Enzosakollari/RPG-Game/blob/main/runeblade/banner.png?raw=true)
 
 ### 🗺️ World Exploration
 ![Explore](https://github.com/Enzosakollari/RPG-Game/blob/main/runeblade/explore.png?raw=true)

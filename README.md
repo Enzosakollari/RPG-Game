@@ -15,7 +15,6 @@ The game was packaged as a **native Windows `.exe`** using **`jpackage`** and is
 ## 🛠️ Technologies Used
 
 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-  <img src="https://img.shields.io/badge/Java-007396?style=flat-square&logo=java&logoColor=white" width="100px"/>
   <img src="https://img.shields.io/badge/Swing-GUI-4E8B3A?style=flat-square&logo=java&logoColor=white" width="100px"/>
   <img src="https://img.shields.io/badge/AWT-Graphics-707070?style=flat-square&logo=java&logoColor=white" width="100px"/>
   <img src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" width="100px"/>
